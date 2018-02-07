@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+
+    <title>granite-multicolor-pad demo</title>
+
+    <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
+
+    <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
+    <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../granite-multicolor-pad.html">
+    <link rel="import" href="../granite-multicolor-pad-board.html">
+
+    <custom-style>
+      <style is="custom-style" include="demo-pages-shared-styles">
+      </style>
+    </custom-style>
+  </head>
+  <body>
+    <div class="vertical-section-container centered">
+      <h3>Basic granite-multicolor-pad demo</h3>
+      <demo-snippet>
+        <template>
+          <granite-multicolor-pad 
+              id="single-pad"
+              name="single-pad"
+              debug></granite-multicolor-pad>
+          <script>
+            let pad = document.querySelector('#single-pad');
+            pad.addEventListener('pad-down', (evt) => {
+              console.log('[outside element] Received event', evt);
+              pad.color = 'green';
+            });
+            pad.addEventListener('pad-up', (evt) => {
+              console.log('[outside element] Received event', evt);
+              pad.color = 'red';
+            });
+          </script>
+        </template>
+      </demo-snippet>
+    </div>
+
+    <div class="vertical-section-container centered">
+        <h3>Basic granite-multicolor-pad demo</h3>
+        <demo-snippet>
+          <template>
+              <granite-multicolor-pad-board 
+                  id="pad-board"
+                  debug></granite-multicolor-pad>
+              <script>
+                  let padBoard = document.querySelector('#pad-board');
+                  padBoard.addEventListener('pad-down', (evt) => {
+                      console.log('[outside element] Received event', evt, padBoard.mainBoardPads[0][0]);
+                      padBoard.setColor(evt.detail.i, evt.detail.j, 'green');
+                  });
+                  padBoard.addEventListener('pad-up', (evt) => {
+                      console.log('[outside element] Received event', evt);
+                      padBoard.setColor(evt.detail.i, evt.detail.j, 'red');
+                  });
+                </script>
+          </template>
+        </demo-snippet>
+      </div>
+  </body>
+</html>

@@ -1,0 +1,256 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-repeat.html">
+<link rel="import" href="./granite-multicolor-pad.html">
+
+<dom-module id="granite-multicolor-pad-board">
+    <template>
+        <style>
+            :host {
+                display: block;
+            }
+
+            #pad-board {
+                display: grid;
+                grid-template-columns: 400px 50px;
+                grid-template-rows: 50px 400px;
+                grid-column-gap: 20px;
+                grid-row-gap: 20px;
+            }
+
+            #main-board {
+                grid-column-start: 0;
+                grid-column-end: 1;
+                grid-row-start: 1;
+                grid-row-end: 2;
+                display: grid;
+                grid-template-columns: repeat(8, 50px);
+                grid-template-rows: repeat(8, 50px);
+                grid-column-gap: 5px;
+                grid-row-gap: 5px;
+            }
+
+            #main-board granite-multicolor-pad {
+                --pad-size: 50px;
+            }
+
+            #upper-row {
+                grid-column-start: 0;
+                grid-column-end: 1;
+                grid-row-start: 0;
+                grid-row-end: 1;
+                display: grid;
+                grid-template-columns: repeat(8, 50px);
+                grid-template-rows: 50px;
+                grid-column-gap: 5px;
+                grid-row-gap: 5px;
+            }
+
+            #right-column {
+                grid-column-start: 1;
+                grid-column-end: 2;
+                grid-row-start: 1;
+                grid-row-end: 2;
+                display: grid;
+                grid-template-columns: 50px;
+                grid-template-rows: repeat(8, 50px);
+                grid-column-gap: 5px;
+                grid-row-gap: 5px;
+            }
+            #upper-row granite-multicolor-pad,
+            #right-column granite-multicolor-pad {
+                --pad-size: 40px;
+                --pad-border-radius: 20px;
+                margin: 5px;
+            }
+        </style>
+        <div id="pad-board">
+            <div id="upper-row">
+                <template is="dom-repeat" items="[[upperRowPads]]" as="pad" index-as="column">
+                    <granite-multicolor-pad 
+                            id="8-[[column]]" 
+                            name="8-[[column]]" 
+                            color="{{pad}}" 
+                            on-pad-down="_onUpperRowPadDown" 
+                            on-pad-up="_onUpperRowPadUp"
+                            debug="[[debug]]"></granite-multicolor-pad>
+                </template>                    
+            </div>
+            <div id="main-board">
+                <template is="dom-repeat" items="[[mainBoardPads]]" as="rowSelector" index-as="row">
+                    <template is="dom-repeat" items="[[rowSelector]]" as="pad" index-as="column">
+                        <granite-multicolor-pad 
+                                id="[[row]]-[[column]]" 
+                                name="[[row]]-[[column]]" 
+                                color="{{pad}}" 
+                                on-pad-down="_onMainBoardPadDown" 
+                                on-pad-up="_onMainBoardPadUp"
+                                debug="[[debug]]"></granite-multicolor-pad>
+                    </template>
+                </template>
+            </div>
+            <div id="right-column">
+                <template is="dom-repeat" items="[[rightColumnPads]]" as="pad" index-as="row">
+                    <granite-multicolor-pad 
+                            id="[[row]-8" 
+                            name="[[row]]-8" 
+                            color="{{pad}}" 
+                            on-pad-down="_onRightColumnPadDown" 
+                            on-pad-up="_onRightColumnPadUp"
+                            debug="[[debug]]"></granite-multicolor-pad>
+                </template>
+                    
+            </div>
+        </div>
+    </template>
+
+    <script>
+        /**
+         * `granite-multicolor-pad-board`
+         * A custom element mimicking a multicolor multi-pad board
+         *
+         * @customElement
+         * @polymer
+         * @demo demo/index.html
+         */
+        class GraniteMulticolorPadBoard extends Polymer.Element {
+            static get is() { return 'granite-multicolor-pad-board'; }
+
+
+            static get properties() {
+                return {
+                    mainBoardPads: {
+                        type: Array,
+                        value: () => {
+                            let padMap = Array(8);
+                            [...padMap.keys()].forEach((i) => {
+                                padMap[i] = Array(8);
+                                [...padMap[i].keys()].forEach((j) => {
+                                    padMap[i][j] = 'off';
+                                });
+                            });
+                            return padMap;
+                        },
+                    },
+                    upperRowPads: {
+                        type: Array,
+                        value: () => {
+                            let padRow = Array(8);
+                            [...padRow.keys()].forEach((i) => {
+                                padRow[i] = 'off';
+                            });
+                            return padRow;
+                        },
+                    },
+                    rightColumnPads: {
+                        type: Array,
+                        value: () => {
+                            let padColumn = Array(8);
+                            [...padColumn.keys()].forEach((i) => {
+                                padColumn[i] = 'off';
+                            });
+                            return padColumn;
+                        },
+                    },
+                    /**
+                     * If true, element logs operation details
+                     */
+                    debug: {
+                        type: Boolean,
+                        value: false,
+                    },
+                };
+            }
+
+            setColor(i, j, color) {
+                if (i<0 || i>8 || j<0 || j>8 || i == j == 8) {
+                    return;
+                }
+                if (i == 8) {
+                    this.set(['upperRowPads', j], color);
+                    return;
+                }
+                if (j == 8) {
+                    this.set(['rightColumnPads', i], color);
+                    return;
+                }
+                this.set(['mainBoardPads', i, j], color);
+                this._log('setMainBoardColor', `${i}-${j}`, this.mainBoardPads[i][j]);
+            }
+
+            _onMainBoardPadDown(evt) {
+                this._log('_onMainBoardPadDown', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-down', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: evt.model.row,
+                        j: evt.model.column,
+                    },
+                }));
+            }
+
+            _onMainBoardPadUp(evt) {
+                this._log('_onMainBoardPadUp', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-up', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: evt.model.row,
+                        j: evt.model.column,
+                    },
+                }));
+            }
+
+
+            _onUpperRowPadDown(evt) {
+                this._log('_onUpperRowPadDown', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-down', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: 8,
+                        j: evt.model.column,
+                    },
+                }));
+            }
+
+            _onUpperRowPadUp(evt) {
+                this._log('_onUpperRowPadUp', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-up', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: 8,
+                        j: evt.model.column,
+                    },
+                }));
+            }
+
+            _onRightColumnPadDown(evt) {
+                this._log('_onRightColumnPadDown', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-down', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: evt.model.row,
+                        j: 8,
+                    },
+                }));
+            }
+
+            _onRightColumnPadUp(evt) {
+                this._log('_onRightColumnPadUp', 'evt', evt);
+                this.dispatchEvent(new CustomEvent('pad-up', {
+                    detail: {
+                        name: evt.detail.name,
+                        i: evt.model.row,
+                        j: 8,
+                    },
+                }));
+            }
+        
+            _log(method, message, ...params) {
+                if (this.debug) {
+                    console.log(`[granite-multicolor-pad-board] ${method} - ${message}`, ...params);
+                }
+            }
+        }
+
+        window.customElements.define(GraniteMulticolorPadBoard.is, GraniteMulticolorPadBoard);
+    </script>
+</dom-module>

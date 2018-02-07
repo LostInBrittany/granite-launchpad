@@ -1,0 +1,141 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="granite-multicolor-pad">
+  <template>
+    <style>
+      :host {
+        display: block;
+        --pad-color-off: grey;
+        --pad-color-amber: orange;
+        --pad-color-green: green;
+        --pad-color-red: red;
+      }
+      #pad {
+        width: var(--pad-size, 100px);
+        height: var(--pad-size, 100px);
+        border-radius: var(--pad-border-radius, 5px);
+        background-color: var(--pad-color, var(--pad-color-off));
+      }
+    </style>
+    <div 
+        id="pad" 
+        on-mousedown="_onPadDown" 
+        on-mouseup="_onPadUp" 
+        on-mouseout="_onPadOut"></div>
+  </template>
+
+  <script>
+    /**
+     * `granite-multicolor-pad`
+     * A custom element mimicking a multicolor touch pad
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class GraniteMulticolorPad extends Polymer.Element {
+      static get is() { return 'granite-multicolor-pad'; }
+
+      /**
+        * Fired when the pad color changes
+        *
+        * @event color-changed
+        */
+
+      /**
+        * Fired when the pad is pressed
+        *
+        * @event pad-down
+        */
+
+
+      /**
+        * Fired when the pad is released
+        *
+        * @event pad-up
+        */
+    
+      static get properties() {
+        return {
+          /**
+           * Element instance name
+           */
+          name: {
+            type: String,
+            value: '',
+          },
+          /**
+           * One of `red`, `green`, `amber`, `yellow` or `off`
+           */
+          color: {
+            type: String,
+            value: '',
+            notify: true,
+            reflect: true,
+            observer: '_onColorChange',
+          },
+          /**
+           * If true, element logs operation details
+           */
+          debug: {
+            type: Boolean,
+            value: false,
+          },
+          _isMouseDown: {
+            type: Boolean,
+            value: false,
+          },
+          _validColors: {
+            type: Array,
+            value: [`red`, `green`, `amber`, `yellow`, `off`],
+          },
+        };
+      }
+
+      _onColorChange() {
+        this._log('_onColorChange', `color:${this.color}`);
+        if (this._validColors.indexOf(this.color) < 0 ) {
+          this.color = 'off';
+          return;
+        }
+        this.updateStyles({'--pad-color': `var(--pad-color-${this.color}`});
+      }
+
+      _onPadDown() {
+        this._log('_onPadDown', `name:${this.name}`);
+        this._isMouseDown = true;
+        this.dispatchEvent(new CustomEvent('pad-down', {
+            detail: {
+              name: this.name,
+            },
+        }));
+      }
+
+      _onPadUp() {
+        this._log('_onPadUp', `name:${this.name}`);
+        this._isMouseDown = false;
+        this.dispatchEvent(new CustomEvent('pad-up', {
+            detail: {
+              name: this.name,
+            },
+        }));
+      }
+
+      _onPadOut() {
+        if (!this._isMouseDown) {
+          return;
+        }
+        this._log('_onPadOut', `name:${this.name}`, 'Mouse out while mouse down');
+        this._onPadUp();
+      }
+
+      _log(method, message, ...params) {
+        if (this.debug) {
+          console.log(`[granite-multicolor-pad] ${method} - ${message}`, ...params);
+        }
+      }
+    }
+
+    window.customElements.define(GraniteMulticolorPad.is, GraniteMulticolorPad);
+  </script>
+</dom-module>
