@@ -177,6 +177,19 @@
                 this._log('setMainBoardColor', `${i}-${j}`, this.mainBoardPads[i][j]);
             }
 
+            getColor(i, j) {
+                if (i<0 || i>8 || j<0 || j>8 || i == j == 8) {
+                    return 'off';
+                }
+                if (i == 8) {
+                    return this.upperRowPads[j];
+                }
+                if (j == 8) {
+                    return this.rightColumnPads[i];
+                }
+                return this.mainBoardPads[i][j];
+            }
+
             _onMainBoardPadDown(evt) {
                 this._log('_onMainBoardPadDown', 'evt', evt);
                 this.dispatchEvent(new CustomEvent('pad-down', {
