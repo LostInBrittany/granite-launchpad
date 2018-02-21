@@ -1,8 +1,8 @@
 <link rel="import" href="../polymer/polymer-element.html">
 <link rel="import" href="../polymer/lib/elements/dom-repeat.html">
-<link rel="import" href="./granite-multicolor-pad.html">
+<link rel="import" href="./granite-launchpad-switch.html">
 
-<dom-module id="granite-multicolor-pad-board">
+<dom-module id="granite-launchpad">
     <template>
         <style>
             :host {
@@ -29,7 +29,7 @@
                 grid-row-gap: 5px;
             }
 
-            #main-board granite-multicolor-pad {
+            #main-board granite-launchpad-switch {
                 --pad-size: 50px;
             }
 
@@ -56,8 +56,8 @@
                 grid-column-gap: 5px;
                 grid-row-gap: 5px;
             }
-            #upper-row granite-multicolor-pad,
-            #right-column granite-multicolor-pad {
+            #upper-row granite-launchpad-switch,
+            #right-column granite-launchpad-switch {
                 --pad-size: 40px;
                 --pad-border-radius: 20px;
                 margin: 5px;
@@ -66,37 +66,37 @@
         <div id="pad-board">
             <div id="upper-row">
                 <template is="dom-repeat" items="[[upperRowPads]]" as="pad" index-as="column">
-                    <granite-multicolor-pad 
+                    <granite-launchpad-switch 
                             id="8-[[column]]" 
                             name="8-[[column]]" 
                             color="{{pad}}" 
-                            on-pad-down="_onUpperRowPadDown" 
-                            on-pad-up="_onUpperRowPadUp"
-                            debug="[[debug]]"></granite-multicolor-pad>
+                            on-pressed="_onUpperRowPadDown" 
+                            on-released="_onUpperRowPadUp"
+                            debug="[[debug]]"></granite-launchpad-switch>
                 </template>                    
             </div>
             <div id="main-board">
                 <template is="dom-repeat" items="[[mainBoardPads]]" as="rowSelector" index-as="row">
                     <template is="dom-repeat" items="[[rowSelector]]" as="pad" index-as="column">
-                        <granite-multicolor-pad 
+                        <granite-launchpad-switch 
                                 id="[[row]]-[[column]]" 
                                 name="[[row]]-[[column]]" 
                                 color="{{pad}}" 
-                                on-pad-down="_onMainBoardPadDown" 
-                                on-pad-up="_onMainBoardPadUp"
-                                debug="[[debug]]"></granite-multicolor-pad>
+                                on-pressed="_onMainBoardPadDown" 
+                                on-released="_onMainBoardPadUp"
+                                debug="[[debug]]"></granite-launchpad-switch>
                     </template>
                 </template>
             </div>
             <div id="right-column">
                 <template is="dom-repeat" items="[[rightColumnPads]]" as="pad" index-as="row">
-                    <granite-multicolor-pad 
+                    <granite-launchpad-switch 
                             id="[[row]-8" 
                             name="[[row]]-8" 
                             color="{{pad}}" 
-                            on-pad-down="_onRightColumnPadDown" 
-                            on-pad-up="_onRightColumnPadUp"
-                            debug="[[debug]]"></granite-multicolor-pad>
+                            on-pressed="_onRightColumnPadDown" 
+                            on-released="_onRightColumnPadUp"
+                            debug="[[debug]]"></granite-launchpad-switch>
                 </template>
                     
             </div>
@@ -105,15 +105,15 @@
 
     <script>
         /**
-         * `granite-multicolor-pad-board`
-         * A custom element mimicking a multicolor multi-pad board
+         * `granite-launchpad`
+         * A custom element mimicking a Novation Launchpad Mini board
          *
          * @customElement
          * @polymer
          * @demo demo/index.html
          */
         class GraniteMulticolorPadBoard extends Polymer.Element {
-            static get is() { return 'granite-multicolor-pad-board'; }
+            static get is() { return 'granite-launchpad'; }
 
 
             static get properties() {
@@ -192,7 +192,7 @@
 
             _onMainBoardPadDown(evt) {
                 this._log('_onMainBoardPadDown', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-down', {
+                this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
                         i: evt.model.row,
@@ -203,7 +203,7 @@
 
             _onMainBoardPadUp(evt) {
                 this._log('_onMainBoardPadUp', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-up', {
+                this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
                         i: evt.model.row,
@@ -215,7 +215,7 @@
 
             _onUpperRowPadDown(evt) {
                 this._log('_onUpperRowPadDown', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-down', {
+                this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
                         i: 8,
@@ -226,7 +226,7 @@
 
             _onUpperRowPadUp(evt) {
                 this._log('_onUpperRowPadUp', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-up', {
+                this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
                         i: 8,
@@ -237,7 +237,7 @@
 
             _onRightColumnPadDown(evt) {
                 this._log('_onRightColumnPadDown', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-down', {
+                this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
                         i: evt.model.row,
@@ -248,7 +248,7 @@
 
             _onRightColumnPadUp(evt) {
                 this._log('_onRightColumnPadUp', 'evt', evt);
-                this.dispatchEvent(new CustomEvent('pad-up', {
+                this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
                         i: evt.model.row,
@@ -259,7 +259,7 @@
         
             _log(method, message, ...params) {
                 if (this.debug) {
-                    console.log(`[granite-multicolor-pad-board] ${method} - ${message}`, ...params);
+                    console.log(`[granite-launchpad] ${method} - ${message}`, ...params);
                 }
             }
         }

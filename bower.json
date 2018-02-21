@@ -1,7 +1,7 @@
 {
-  "name": "granite-multicolor-pad-board",
-  "description": "A custom element mimicking a multicolor touch pad board",
-  "main": "granite-multicolor-pad-board.html",
+  "name": "granite-launchpad",
+  "description": "A custom element mimicking a Novation Launchpad Mini board",
+  "main": "granite-launchpad.html",
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0"
   },

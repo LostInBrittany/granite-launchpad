@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
 
-  <title>granite-multicolor-pad demo</title>
+  <title>granite-launchpad-switch demo</title>
 
   <script src="../../webcomponentsjs/webcomponents-lite.js"></script>
   <script src='../bower_components/launchpad-webmidi/dist/launchpad-webmidi.umd.js'>
@@ -13,8 +13,8 @@
 
   <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
   <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
-  <link rel="import" href="../granite-multicolor-pad.html">
-  <link rel="import" href="../granite-multicolor-pad-board.html">
+  <link rel="import" href="../granite-launchpad-switch.html">
+  <link rel="import" href="../granite-launchpad.html">
 
   <custom-style>
     <style is="custom-style" include="demo-pages-shared-styles">
@@ -24,17 +24,17 @@
 
 <body>
   <div class="vertical-section-container centered">
-    <h3>Basic granite-multicolor-pad demo</h3>
+    <h3>Basic granite-launchpad-switch demo</h3>
     <demo-snippet>
       <template>
-        <granite-multicolor-pad id="single-pad" name="single-pad" debug></granite-multicolor-pad>
+        <granite-launchpad-switch id="single-pad" name="single-pad" debug></granite-launchpad-switch>
         <script>
           let singlePad = document.querySelector('#single-pad');
-          singlePad.addEventListener('pad-down', (evt) => {
+          singlePad.addEventListener('pressed', (evt) => {
             console.log('[outside element] Received event', evt);
             singlePad.color = 'green';
           });
-          singlePad.addEventListener('pad-up', (evt) => {
+          singlePad.addEventListener('released', (evt) => {
             console.log('[outside element] Received event', evt);
             singlePad.color = 'red';
           });
@@ -44,19 +44,19 @@
   </div>
 
   <div class="vertical-section-container centered">
-    <h3>Basic granite-multicolor-pad demo</h3>
+    <h3>Basic granite-launchpad-switch demo</h3>
     <demo-snippet>
       <template>
-        <granite-multicolor-pad-board id="pad-board" debug></granite-multicolor-pad-board>
+        <granite-launchpad id="pad-board" debug></granite-launchpad>
           <script>
             let padBoard = document.querySelector('#pad-board');
             console.log('padBoard', padBoard);
             console.dir(padBoard);
-            padBoard.addEventListener('pad-down', (evt) => {
+            padBoard.addEventListener('pressed', (evt) => {
               console.log('[outside element] Received event', evt, padBoard.mainBoardPads[0][0]);
               padBoard.setColor(evt.detail.i, evt.detail.j, 'green');
             });
-            padBoard.addEventListener('pad-up', (evt) => {
+            padBoard.addEventListener('released', (evt) => {
               console.log('[outside element] Received event', evt);
               padBoard.setColor(evt.detail.i, evt.detail.j, 'red');
             });
@@ -66,11 +66,11 @@
   </div>
 
   <div class="vertical-section-container centered">
-    <h3>Basic digital twin granite-multicolor-pad demo</h3>
+    <h3>Basic digital twin granite-launchpad-switch demo</h3>
     <h4>If you have a browser with Web MIDI API and a Novation Launchpad board, plug the board and reload...</h4>
     <demo-snippet>
       <template>
-        <granite-multicolor-pad-board id="pad-board-twin" debug></granite-multicolor-pad-board>
+        <granite-launchpad id="pad-board-twin" debug></granite-launchpad>
           <script>
 
             let padBoardTwin = document.querySelector('#pad-board-twin');
@@ -110,12 +110,12 @@
               });
             });
 
-            padBoardTwin.addEventListener('pad-down', (evt) => {
+            padBoardTwin.addEventListener('pressed', (evt) => {
               console.log('[outside element] Received event from digital twin', evt);
               console.log(padBoardTwin.getColor(evt.detail.i, evt.detail.j));
               onPadDown(evt.detail.i, evt.detail.j);
             });
-            padBoardTwin.addEventListener('pad-up', (evt) => {
+            padBoardTwin.addEventListener('released', (evt) => {
               console.log('[outside element] Received event from digital twin', evt);
               onPadUp(evt.detail.i, evt.detail.j);
             });

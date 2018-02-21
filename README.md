@@ -1,6 +1,6 @@
-# granite-multicolor-pad-board
+# granite-launchpad
 
-A custom element mimicking a multicolor touch pad
+A custom element mimicking a Novation Launchpad Mini board
 
 ## Install the Polymer-CLI
 

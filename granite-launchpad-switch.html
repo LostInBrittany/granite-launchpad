@@ -1,6 +1,6 @@
 <link rel="import" href="../polymer/polymer-element.html">
 
-<dom-module id="granite-multicolor-pad">
+<dom-module id="granite-launchpad-switch">
   <template>
     <style>
       :host {
@@ -19,22 +19,22 @@
     </style>
     <div 
         id="pad" 
-        on-mousedown="_onPadDown" 
-        on-mouseup="_onPadUp" 
-        on-mouseout="_onPadOut"></div>
+        on-mousedown="_onSwitchDown" 
+        on-mouseup="_onSwitchUp" 
+        on-mouseout="_onSwitchOut"></div>
   </template>
 
   <script>
     /**
-     * `granite-multicolor-pad`
-     * A custom element mimicking a multicolor touch pad
+     * `granite-launchpad-switch`
+     * A custom element mimicking a Novation Launchpad Mini switch
      *
      * @customElement
      * @polymer
      * @demo demo/index.html
      */
-    class GraniteMulticolorPad extends Polymer.Element {
-      static get is() { return 'granite-multicolor-pad'; }
+    class GraniteLaunchpadSwitch extends Polymer.Element {
+      static get is() { return 'granite-launchpad-switch'; }
 
       /**
         * Fired when the pad color changes
@@ -45,14 +45,14 @@
       /**
         * Fired when the pad is pressed
         *
-        * @event pad-down
+        * @event pressed
         */
 
 
       /**
         * Fired when the pad is released
         *
-        * @event pad-up
+        * @event released
         */
     
       static get properties() {
@@ -93,7 +93,9 @@
       }
 
       _onColorChange() {
-        this._log('_onColorChange', `color:${this.color}`);
+        if (this.debug) {
+          console.log('[granite-launchpad-switch] _onColorChange ', `color:${this.color}`);
+        }
         if (this._validColors.indexOf(this.color) < 0 ) {
           this.color = 'off';
           return;
@@ -101,41 +103,42 @@
         this.updateStyles({'--pad-color': `var(--pad-color-${this.color}`});
       }
 
-      _onPadDown() {
-        this._log('_onPadDown', `name:${this.name}`);
+      _onSwitchDown() {
+        if (this.debug) {
+          console.log('[granite-launchpad-switch] _onSwitchDown ', `name:${this.name}`);
+        }
         this._isMouseDown = true;
-        this.dispatchEvent(new CustomEvent('pad-down', {
+        this.dispatchEvent(new CustomEvent('pressed', {
             detail: {
               name: this.name,
             },
         }));
       }
 
-      _onPadUp() {
-        this._log('_onPadUp', `name:${this.name}`);
+      _onSwitchUp() {
+        if (this.debug) {
+          console.log('[granite-launchpad-switch] _onSwitchUp ', `name:${this.name}`);
+        }
         this._isMouseDown = false;
-        this.dispatchEvent(new CustomEvent('pad-up', {
+        this.dispatchEvent(new CustomEvent('released', {
             detail: {
               name: this.name,
             },
         }));
       }
 
-      _onPadOut() {
+      _onSwitchOut() {
         if (!this._isMouseDown) {
           return;
         }
-        this._log('_onPadOut', `name:${this.name}`, 'Mouse out while mouse down');
-        this._onPadUp();
-      }
-
-      _log(method, message, ...params) {
         if (this.debug) {
-          console.log(`[granite-multicolor-pad] ${method} - ${message}`, ...params);
+          console.log('[granite-launchpad-switch] _onSwitchOut ',
+              `name:${this.name}`, 'Mouse out while mouse down');
         }
+        this._onSwitchUp();
       }
     }
 
-    window.customElements.define(GraniteMulticolorPad.is, GraniteMulticolorPad);
+    window.customElements.define(GraniteLaunchpadSwitch.is, GraniteLaunchpadSwitch);
   </script>
 </dom-module>
