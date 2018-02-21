@@ -9,7 +9,7 @@
                 display: block;
             }
 
-            #pad-board {
+            #switch-board {
                 display: grid;
                 grid-template-columns: 400px 50px;
                 grid-template-rows: 50px 400px;
@@ -30,7 +30,7 @@
             }
 
             #main-board granite-launchpad-switch {
-                --pad-size: 50px;
+                --switch-size: 50px;
             }
 
             #upper-row {
@@ -58,44 +58,44 @@
             }
             #upper-row granite-launchpad-switch,
             #right-column granite-launchpad-switch {
-                --pad-size: 40px;
-                --pad-border-radius: 20px;
+                --switch-size: 40px;
+                --switch-border-radius: 20px;
                 margin: 5px;
             }
         </style>
-        <div id="pad-board">
+        <div id="switch-board">
             <div id="upper-row">
-                <template is="dom-repeat" items="[[upperRowPads]]" as="pad" index-as="column">
+                <template is="dom-repeat" items="[[upperRowSwitches]]" as="switch" index-as="column">
                     <granite-launchpad-switch 
                             id="8-[[column]]" 
                             name="8-[[column]]" 
-                            color="{{pad}}" 
-                            on-pressed="_onUpperRowPadDown" 
-                            on-released="_onUpperRowPadUp"
+                            color="{{switch}}" 
+                            on-pressed="_onUpperRowSwitchDown" 
+                            on-released="_onUpperRowSwitchUp"
                             debug="[[debug]]"></granite-launchpad-switch>
                 </template>                    
             </div>
             <div id="main-board">
-                <template is="dom-repeat" items="[[mainBoardPads]]" as="rowSelector" index-as="row">
-                    <template is="dom-repeat" items="[[rowSelector]]" as="pad" index-as="column">
+                <template is="dom-repeat" items="[[mainBoardSwitches]]" as="rowSelector" index-as="row">
+                    <template is="dom-repeat" items="[[rowSelector]]" as="switch" index-as="column">
                         <granite-launchpad-switch 
                                 id="[[row]]-[[column]]" 
                                 name="[[row]]-[[column]]" 
-                                color="{{pad}}" 
-                                on-pressed="_onMainBoardPadDown" 
-                                on-released="_onMainBoardPadUp"
+                                color="{{switch}}" 
+                                on-pressed="_onMainBoardSwitchDown" 
+                                on-released="_onMainBoardSwitchUp"
                                 debug="[[debug]]"></granite-launchpad-switch>
                     </template>
                 </template>
             </div>
             <div id="right-column">
-                <template is="dom-repeat" items="[[rightColumnPads]]" as="pad" index-as="row">
+                <template is="dom-repeat" items="[[rightColumnSwitches]]" as="switch" index-as="row">
                     <granite-launchpad-switch 
                             id="[[row]-8" 
                             name="[[row]]-8" 
-                            color="{{pad}}" 
-                            on-pressed="_onRightColumnPadDown" 
-                            on-released="_onRightColumnPadUp"
+                            color="{{switch}}" 
+                            on-pressed="_onRightColumnSwitchDown" 
+                            on-released="_onRightColumnSwitchUp"
                             debug="[[debug]]"></granite-launchpad-switch>
                 </template>
                     
@@ -112,43 +112,43 @@
          * @polymer
          * @demo demo/index.html
          */
-        class GraniteMulticolorPadBoard extends Polymer.Element {
+        class GraniteLaunchpad extends Polymer.Element {
             static get is() { return 'granite-launchpad'; }
 
 
             static get properties() {
                 return {
-                    mainBoardPads: {
+                    mainBoardSwitches: {
                         type: Array,
                         value: () => {
-                            let padMap = Array(8);
-                            [...padMap.keys()].forEach((i) => {
-                                padMap[i] = Array(8);
-                                [...padMap[i].keys()].forEach((j) => {
-                                    padMap[i][j] = 'off';
+                            let switchMap = Array(8);
+                            [...switchMap.keys()].forEach((i) => {
+                                switchMap[i] = Array(8);
+                                [...switchMap[i].keys()].forEach((j) => {
+                                    switchMap[i][j] = 'off';
                                 });
                             });
-                            return padMap;
+                            return switchMap;
                         },
                     },
-                    upperRowPads: {
+                    upperRowSwitches: {
                         type: Array,
                         value: () => {
-                            let padRow = Array(8);
-                            [...padRow.keys()].forEach((i) => {
-                                padRow[i] = 'off';
+                            let switchRow = Array(8);
+                            [...switchRow.keys()].forEach((i) => {
+                                switchRow[i] = 'off';
                             });
-                            return padRow;
+                            return switchRow;
                         },
                     },
-                    rightColumnPads: {
+                    rightColumnSwitches: {
                         type: Array,
                         value: () => {
-                            let padColumn = Array(8);
-                            [...padColumn.keys()].forEach((i) => {
-                                padColumn[i] = 'off';
+                            let switchColumn = Array(8);
+                            [...switchColumn.keys()].forEach((i) => {
+                                switchColumn[i] = 'off';
                             });
-                            return padColumn;
+                            return switchColumn;
                         },
                     },
                     /**
@@ -166,17 +166,17 @@
                     return;
                 }
                 if (i == 8) {
-                    this.set(['upperRowPads', j], color);
+                    this.set(['upperRowSwitches', j], color);
                     return;
                 }
                 if (j == 8) {
-                    this.set(['rightColumnPads', i], color);
+                    this.set(['rightColumnSwitches', i], color);
                     return;
                 }
-                this.set(['mainBoardPads', i, j], color);
+                this.set(['mainBoardSwitches', i, j], color);
                 if (this.debug) {
                     console.log(`[granite-launchpad] setMainBoardColor  ${i}-${j}`,
-                            this.mainBoardPads[i][j]);
+                            this.mainBoardSwitches[i][j]);
                 }
             }
 
@@ -185,17 +185,17 @@
                     return 'off';
                 }
                 if (i == 8) {
-                    return this.upperRowPads[j];
+                    return this.upperRowSwitches[j];
                 }
                 if (j == 8) {
-                    return this.rightColumnPads[i];
+                    return this.rightColumnSwitches[i];
                 }
-                return this.mainBoardPads[i][j];
+                return this.mainBoardSwitches[i][j];
             }
 
-            _onMainBoardPadDown(evt) {
+            _onMainBoardSwitchDown(evt) {
                 if (this.debug) {
-                    console.log(`[granite-launchpad] _onMainBoardPadDown evt`, evt);
+                    console.log(`[granite-launchpad] _onMainBoardSwitchDown evt`, evt);
                 }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
@@ -206,9 +206,9 @@
                 }));
             }
 
-            _onMainBoardPadUp(evt) {
+            _onMainBoardSwitchUp(evt) {
                 if (this.debug) {
-                    console.log(`[granite-launchpad] _onMainBoardPadUp evt`, evt);
+                    console.log(`[granite-launchpad] _onMainBoardSwitchUp evt`, evt);
                 }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
@@ -220,9 +220,9 @@
             }
 
 
-            _onUpperRowPadDown(evt) {
+            _onUpperRowSwitchDown(evt) {
                 if (this.debug) {
-                    console.log(`[granite-launchpad] _onUpperRowPadDown evt`, evt);
+                    console.log(`[granite-launchpad] _onUpperRowSwitchDown evt`, evt);
                 }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
@@ -233,9 +233,9 @@
                 }));
             }
 
-            _onUpperRowPadUp(evt) {
+            _onUpperRowSwitchUp(evt) {
                 if (this.debug) {
-                    console.log(`[granite-launchpad] _onUpperRowPadUp evt`, evt);
+                    console.log(`[granite-launchpad] _onUpperRowSwitchUp evt`, evt);
                 }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
@@ -246,9 +246,9 @@
                 }));
             }
 
-            _onRightColumnPadDown(evt) {
+            _onRightColumnSwitchDown(evt) {
                 if (this.debug) {
-                    console.log(`[granite-launchpad] _onRightColumnPadDown evt`, evt);
+                    console.log(`[granite-launchpad] _onRightColumnSwitchDown evt`, evt);
                 }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
@@ -259,9 +259,9 @@
                 }));
             }
 
-            _onRightColumnPadUp(evt) {
+            _onRightColumnSwitchUp(evt) {
                 if (this.debug) {
-                    console.log('[granite-launchpad] _onRightColumnPadUp - evt', evt);
+                    console.log('[granite-launchpad] _onRightColumnSwitchUp - evt', evt);
                 }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
@@ -273,6 +273,6 @@
             }
         }
 
-        window.customElements.define(GraniteMulticolorPadBoard.is, GraniteMulticolorPadBoard);
+        window.customElements.define(GraniteLaunchpad.is, GraniteLaunchpad);
     </script>
 </dom-module>

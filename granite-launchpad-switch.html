@@ -5,20 +5,20 @@
     <style>
       :host {
         display: block;
-        --pad-color-off: grey;
-        --pad-color-amber: orange;
-        --pad-color-green: green;
-        --pad-color-red: red;
+        --switch-color-off: grey;
+        --switch-color-amber: orange;
+        --switch-color-green: green;
+        --switch-color-red: red;
       }
-      #pad {
-        width: var(--pad-size, 100px);
-        height: var(--pad-size, 100px);
-        border-radius: var(--pad-border-radius, 5px);
-        background-color: var(--pad-color, var(--pad-color-off));
+      #switch {
+        width: var(--switch-size, 100px);
+        height: var(--switch-size, 100px);
+        border-radius: var(--switch-border-radius, 5px);
+        background-color: var(--switch-color, var(--switch-color-off));
       }
     </style>
     <div 
-        id="pad" 
+        id="switch" 
         on-mousedown="_onSwitchDown" 
         on-mouseup="_onSwitchUp" 
         on-mouseout="_onSwitchOut"></div>
@@ -37,20 +37,20 @@
       static get is() { return 'granite-launchpad-switch'; }
 
       /**
-        * Fired when the pad color changes
+        * Fired when the switch color changes
         *
         * @event color-changed
         */
 
       /**
-        * Fired when the pad is pressed
+        * Fired when the switch is pressed
         *
         * @event pressed
         */
 
 
       /**
-        * Fired when the pad is released
+        * Fired when the switch is released
         *
         * @event released
         */
@@ -100,7 +100,7 @@
           this.color = 'off';
           return;
         }
-        this.updateStyles({'--pad-color': `var(--pad-color-${this.color}`});
+        this.updateStyles({'--switch-color': `var(--switch-color-${this.color}`});
       }
 
       _onSwitchDown() {

@@ -48,19 +48,19 @@
     <demo-snippet>
       <template>
         <granite-launchpad id="pad-board" debug></granite-launchpad>
-          <script>
-            let padBoard = document.querySelector('#pad-board');
-            console.log('padBoard', padBoard);
-            console.dir(padBoard);
-            padBoard.addEventListener('pressed', (evt) => {
-              console.log('[outside element] Received event', evt, padBoard.mainBoardPads[0][0]);
-              padBoard.setColor(evt.detail.i, evt.detail.j, 'green');
-            });
-            padBoard.addEventListener('released', (evt) => {
-              console.log('[outside element] Received event', evt);
-              padBoard.setColor(evt.detail.i, evt.detail.j, 'red');
-            });
-          </script>
+        <script>
+          let padBoard = document.querySelector('#pad-board');
+          console.log('padBoard', padBoard);
+          console.dir(padBoard);
+          padBoard.addEventListener('pressed', (evt) => {
+            console.log('[outside element] Received event', evt, padBoard.mainBoardSwitches[0][0]);
+            padBoard.setColor(evt.detail.i, evt.detail.j, 'green');
+          });
+          padBoard.addEventListener('released', (evt) => {
+            console.log('[outside element] Received event', evt);
+            padBoard.setColor(evt.detail.i, evt.detail.j, 'red');
+          });
+        </script>
       </template>
     </demo-snippet>
   </div>
