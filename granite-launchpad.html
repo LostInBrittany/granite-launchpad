@@ -174,7 +174,10 @@
                     return;
                 }
                 this.set(['mainBoardPads', i, j], color);
-                this._log('setMainBoardColor', `${i}-${j}`, this.mainBoardPads[i][j]);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] setMainBoardColor  ${i}-${j}`,
+                            this.mainBoardPads[i][j]);
+                }
             }
 
             getColor(i, j) {
@@ -191,7 +194,9 @@
             }
 
             _onMainBoardPadDown(evt) {
-                this._log('_onMainBoardPadDown', 'evt', evt);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] _onMainBoardPadDown evt`, evt);
+                }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
@@ -202,7 +207,9 @@
             }
 
             _onMainBoardPadUp(evt) {
-                this._log('_onMainBoardPadUp', 'evt', evt);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] _onMainBoardPadUp evt`, evt);
+                }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
@@ -214,7 +221,9 @@
 
 
             _onUpperRowPadDown(evt) {
-                this._log('_onUpperRowPadDown', 'evt', evt);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] _onUpperRowPadDown evt`, evt);
+                }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
@@ -225,7 +234,9 @@
             }
 
             _onUpperRowPadUp(evt) {
-                this._log('_onUpperRowPadUp', 'evt', evt);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] _onUpperRowPadUp evt`, evt);
+                }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
@@ -236,7 +247,9 @@
             }
 
             _onRightColumnPadDown(evt) {
-                this._log('_onRightColumnPadDown', 'evt', evt);
+                if (this.debug) {
+                    console.log(`[granite-launchpad] _onRightColumnPadDown evt`, evt);
+                }
                 this.dispatchEvent(new CustomEvent('pressed', {
                     detail: {
                         name: evt.detail.name,
@@ -247,7 +260,9 @@
             }
 
             _onRightColumnPadUp(evt) {
-                this._log('_onRightColumnPadUp', 'evt', evt);
+                if (this.debug) {
+                    console.log('[granite-launchpad] _onRightColumnPadUp - evt', evt);
+                }
                 this.dispatchEvent(new CustomEvent('released', {
                     detail: {
                         name: evt.detail.name,
@@ -255,12 +270,6 @@
                         j: 8,
                     },
                 }));
-            }
-        
-            _log(method, message, ...params) {
-                if (this.debug) {
-                    console.log(`[granite-launchpad] ${method} - ${message}`, ...params);
-                }
             }
         }
 
