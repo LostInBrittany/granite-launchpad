@@ -532,27 +532,20 @@ export class GraniteLaunchpadPad extends LitElement {
   };
 
   static styles = css`
+    /* Every colour default lives in its var() fallback, never as a
+       declaration on :host. A declaration on the host sits on the pad itself
+       and beats anything inherited into it, so tokens set on a wrapping board,
+       twin or body would be silently ignored - the tokens would be themeable
+       only by a rule matching granite-launchpad-pad. With the default in the
+       fallback there is nothing to beat and the token inherits normally.
+       Yellow has no low or medium: parseColor clamps it to full. */
     :host {
-      --granite-launchpad-off: #2b2b2f;
-      --granite-launchpad-red-low: #4a1512;
-      --granite-launchpad-red-medium: #9c2a22;
-      --granite-launchpad-red-full: #ff3b2f;
-      --granite-launchpad-green-low: #123f1c;
-      --granite-launchpad-green-medium: #227a33;
-      --granite-launchpad-green-full: #35d94f;
-      --granite-launchpad-amber-low: #4a3410;
-      --granite-launchpad-amber-medium: #9c6c1e;
-      --granite-launchpad-amber-full: #ffae2f;
-      /* Yellow has no low or medium: parseColor clamps it to full, so a
-         token for either would be dead. */
-      --granite-launchpad-yellow-full: #ffe94f;
-
       display: block;
       box-sizing: border-box;
       width: var(--granite-launchpad-pad-size, 2.5rem);
       height: var(--granite-launchpad-pad-size, 2.5rem);
       border-radius: 0.2rem;
-      background: var(--granite-launchpad-off);
+      background: var(--granite-launchpad-off, #2b2b2f);
       /* Without this the browser claims the gesture for scrolling and the
          pointerup never arrives. */
       touch-action: none;
@@ -574,16 +567,16 @@ export class GraniteLaunchpadPad extends LitElement {
       outline-offset: 2px;
     }
 
-    :host([color='red']) { background: var(--granite-launchpad-red-full); box-shadow: var(--granite-launchpad-glow, none); }
-    :host([color='red medium']) { background: var(--granite-launchpad-red-medium); }
-    :host([color='red low']) { background: var(--granite-launchpad-red-low); }
-    :host([color='green']) { background: var(--granite-launchpad-green-full); box-shadow: var(--granite-launchpad-glow, none); }
-    :host([color='green medium']) { background: var(--granite-launchpad-green-medium); }
-    :host([color='green low']) { background: var(--granite-launchpad-green-low); }
-    :host([color='amber']) { background: var(--granite-launchpad-amber-full); box-shadow: var(--granite-launchpad-glow, none); }
-    :host([color='amber medium']) { background: var(--granite-launchpad-amber-medium); }
-    :host([color='amber low']) { background: var(--granite-launchpad-amber-low); }
-    :host([color='yellow']) { background: var(--granite-launchpad-yellow-full); box-shadow: var(--granite-launchpad-glow, none); }
+    :host([color='red']) { background: var(--granite-launchpad-red-full, #ff3b2f); box-shadow: var(--granite-launchpad-glow, none); }
+    :host([color='red medium']) { background: var(--granite-launchpad-red-medium, #9c2a22); }
+    :host([color='red low']) { background: var(--granite-launchpad-red-low, #4a1512); }
+    :host([color='green']) { background: var(--granite-launchpad-green-full, #35d94f); box-shadow: var(--granite-launchpad-glow, none); }
+    :host([color='green medium']) { background: var(--granite-launchpad-green-medium, #227a33); }
+    :host([color='green low']) { background: var(--granite-launchpad-green-low, #123f1c); }
+    :host([color='amber']) { background: var(--granite-launchpad-amber-full, #ffae2f); box-shadow: var(--granite-launchpad-glow, none); }
+    :host([color='amber medium']) { background: var(--granite-launchpad-amber-medium, #9c6c1e); }
+    :host([color='amber low']) { background: var(--granite-launchpad-amber-low, #4a3410); }
+    :host([color='yellow']) { background: var(--granite-launchpad-yellow-full, #ffe94f); box-shadow: var(--granite-launchpad-glow, none); }
   `;
 
   #color = 'off';

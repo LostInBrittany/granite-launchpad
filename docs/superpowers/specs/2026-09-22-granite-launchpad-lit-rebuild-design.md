@@ -148,11 +148,20 @@ something the board it mirrors cannot do. The clamp warns when `debug` is set.
 
 ### Rendering
 
-A pad sets `background: var(--granite-launchpad-<hue>-<level>)`, giving 11
-tokens: `off`, `low`/`medium`/`full` for each of `red`, `green` and `amber`, and
-`yellow-full` alone – yellow clamps to full, so a token for a dimmer yellow
-would never be read. Defaults approximate Launchpad Mini LEDs; all are
-overridable.
+A pad sets `background: var(--granite-launchpad-<hue>-<level>, <default>)`,
+giving 11 tokens: `off`, `low`/`medium`/`full` for each of `red`, `green` and
+`amber`, and `yellow-full` alone – yellow clamps to full, so a token for a
+dimmer yellow would never be read.
+
+Each default lives in its own `var()` fallback and is **never declared on
+`:host`**. That distinction decides whether the tokens are really overridable.
+A declaration inside `:host` sits on the pad element itself, and a declaration
+on an element beats any value inherited into it, so a page setting the token on
+a wrapping element – or on `body` – would be silently ignored and only a rule
+matching `granite-launchpad-pad` itself would work. With the default in the
+fallback there is nothing to beat, so the token inherits normally and a board,
+a twin or the page can theme every pad beneath it. `--granite-launchpad-pad-size`
+and `--granite-launchpad-gap` already work this way.
 
 A brightness bloom is available through `--granite-launchpad-glow`, unset by
 default. Flat rectangles do not read as lit LEDs, but the effect is opt-in
