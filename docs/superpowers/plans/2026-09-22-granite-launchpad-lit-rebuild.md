@@ -1357,6 +1357,7 @@ const palette = new Launchpad();
  */
 export class FakeLaunchpad {
   constructor( { failWith = null } = {} ) {
+    this._colError = null;
     this.red = palette.red;
     this.green = palette.green;
     this.amber = palette.amber;
@@ -1381,8 +1382,19 @@ export class FakeLaunchpad {
   }
 
   col( color, buttons ) {
+    // MIDIOutput.send() throws synchronously once the port is gone, and
+    // launchpad-webmidi's sendRaw() calls it directly, so this is what a
+    // Launchpad unplugged mid-session actually looks like to the twin.
+    if ( this._colError ) {
+      throw this._colError;
+    }
     this.calls.push( { color, buttons } );
     return Promise.resolve( true );
+  }
+
+  /** Make every later col() throw, as an unplugged Launchpad does. */
+  breakOutput( error ) {
+    this._colError = error;
   }
 
   /** Push a key event as the hardware would. */
@@ -1547,6 +1559,41 @@ describe( 'granite-launchpad mirroring', () => {
       new PointerEvent( 'pointerdown', { pointerId: 1, bubbles: true, composed: true } ) );
     await aTimeout( 0 );
     expect( fake.calls ).to.be.empty;
+  } );
+
+  it( 'survives the Launchpad being unplugged mid-session', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await twinWith( fake );
+    await el.connect();
+
+    const boom = new Error( 'port is gone' );
+    fake.breakOutput( boom );
+
+    const failed = oneEvent( el, 'launchpad-error' );
+    el.setColor( 3, 5, 'red' );
+    const event = await failed;
+    await elementUpdated( el );
+
+    expect( el.board.getColor( 3, 5 ), 'the board still paints' ).to.equal( 'red' );
+    expect( el.state ).to.equal( 'error' );
+    expect( el.error ).to.equal( boom );
+    expect( event.detail.error ).to.equal( boom );
+  } );
+
+  it( 'reports a lost Launchpad once, not once per write', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await twinWith( fake );
+    await el.connect();
+    fake.breakOutput( new Error( 'port is gone' ) );
+
+    let errors = 0;
+    el.addEventListener( 'launchpad-error', () => { errors += 1; } );
+    el.setColor( 0, 0, 'red' );
+    el.setColor( 1, 1, 'green' );
+    await elementUpdated( el );
+
+    expect( errors ).to.equal( 1 );
+    expect( el.board.getColor( 1, 1 ), 'the screen keeps working' ).to.equal( 'green' );
   } );
 
   it( 'clears both sides', async () => {
@@ -1754,7 +1801,24 @@ export class GraniteLaunchpad extends LitElement {
     }
     const { hue, level } = parseColor( color, { debug: this.debug } );
     const value = hue === 'off' ? this.launchpad.off : this.launchpad[ hue ].level( level );
-    this.launchpad.col( value, [ x, y ] );
+    try {
+      this.launchpad.col( value, [ x, y ] );
+    } catch ( error ) {
+      // launchpad-webmidi's sendRaw() is a bare MIDIOutput.send(), which
+      // throws synchronously once the port is gone - a Launchpad unplugged
+      // mid-session. Without this, every setColor() after that would throw at
+      // the page, having already painted the board.
+      //
+      // The board keeps working on screen, the page is told once, and later
+      // writes skip the hardware on their own because #send returns early on
+      // any state other than 'connected'.
+      this.state = 'error';
+      this.error = error;
+      if ( this.debug ) {
+        console.warn( '[granite-launchpad] lost the Launchpad:', error );
+      }
+      this.#fire( 'launchpad-error', { error } );
+    }
   }
 
   #onKey = ( key ) => {
