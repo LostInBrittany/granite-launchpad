@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>granite-launchpad – a single pad</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #17171a; color: #eee; padding: 2rem; }
+    granite-launchpad-pad { --granite-launchpad-pad-size: 6rem; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "lit": "../node_modules/lit/index.js",
+        "lit/": "../node_modules/lit/",
+        "@lit/reactive-element": "../node_modules/@lit/reactive-element/reactive-element.js",
+        "@lit/reactive-element/": "../node_modules/@lit/reactive-element/",
+        "lit-html": "../node_modules/lit-html/lit-html.js",
+        "lit-html/": "../node_modules/lit-html/",
+        "lit-element/lit-element.js": "../node_modules/lit-element/lit-element.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>A single pad</h1>
+  <p>Press it: green while held, red once released.</p>
+
+  <granite-launchpad-pad id="pad"></granite-launchpad-pad>
+
+  <script type="module">
+    import '../index.js';
+
+    const pad = document.querySelector( '#pad' );
+    pad.addEventListener( 'pad-press', () => { pad.color = 'green'; } );
+    pad.addEventListener( 'pad-release', () => { pad.color = 'red'; } );
+  </script>
+</body>
+</html>

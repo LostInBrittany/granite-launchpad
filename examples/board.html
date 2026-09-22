@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>granite-launchpad – the board</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #17171a; color: #eee; padding: 2rem; }
+    granite-launchpad-board { --granite-launchpad-pad-size: 3rem; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "lit": "../node_modules/lit/index.js",
+        "lit/": "../node_modules/lit/",
+        "@lit/reactive-element": "../node_modules/@lit/reactive-element/reactive-element.js",
+        "@lit/reactive-element/": "../node_modules/@lit/reactive-element/",
+        "lit-html": "../node_modules/lit-html/lit-html.js",
+        "lit-html/": "../node_modules/lit-html/",
+        "lit-element/lit-element.js": "../node_modules/lit-element/lit-element.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>The board</h1>
+  <p>Press a pad to cycle it: off, green, amber, red, and back.</p>
+
+  <granite-launchpad-board id="board"></granite-launchpad-board>
+
+  <script type="module">
+    import '../index.js';
+
+    const CYCLE = [ 'off', 'green', 'amber', 'red' ];
+    const board = document.querySelector( '#board' );
+
+    board.addEventListener( 'pad-press', ( event ) => {
+      const { x, y } = event.detail;
+      const next = CYCLE[ ( CYCLE.indexOf( board.getColor( x, y ) ) + 1 ) % CYCLE.length ];
+      board.setColor( x, y, next );
+    } );
+  </script>
+</body>
+</html>

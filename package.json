@@ -1,0 +1,60 @@
+{
+  "name": "@granite-elements/granite-launchpad",
+  "version": "1.0.0",
+  "description": "Lit web components mimicking a Novation Launchpad Mini board, with a digital twin of a real one",
+  "type": "module",
+  "main": "index.js",
+  "module": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./twin.js": "./twin.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src",
+    "index.js",
+    "twin.js",
+    "CHANGELOG.md",
+    "LICENCE.md",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "wtr",
+    "test:watch": "wtr --watch"
+  },
+  "keywords": [
+    "launchpad",
+    "launchpad-mini",
+    "novation",
+    "midi",
+    "webmidi",
+    "web-components",
+    "lit",
+    "custom-elements",
+    "digital-twin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LostInBrittany/granite-launchpad.git"
+  },
+  "homepage": "https://github.com/LostInBrittany/granite-launchpad#readme",
+  "bugs": {
+    "url": "https://github.com/LostInBrittany/granite-launchpad/issues"
+  },
+  "author": "Horacio Gonzalez <horacio.gonzalez@gmail.com>",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "lit": "^3.3.3",
+    "launchpad-webmidi": "^2.0.0"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^5.0.0",
+    "@web/test-runner": "^1.0.0",
+    "@web/test-runner-playwright": "^1.0.0",
+    "playwright": "^1.63.0"
+  }
+}
