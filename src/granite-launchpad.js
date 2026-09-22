@@ -67,9 +67,17 @@ export class GraniteLaunchpad extends LitElement {
   }
 
   firstUpdated() {
-    if ( this.autoConnect ) {
-      this.connect();
+    if ( !this.autoConnect ) {
+      return;
     }
+    // connect() sets `state`, which is reactive. Setting it from inside
+    // firstUpdated schedules a second update from within the first, and Lit
+    // warns about that in dev builds (lit.dev/msg/change-in-update) - a
+    // warning every consumer of this component would see in their console.
+    // Waiting for the current update to finish costs nothing: a real
+    // connect() is a Web MIDI permission request, orders of magnitude longer
+    // than an update cycle.
+    this.updateComplete.then( () => this.connect() );
   }
 
   /**
