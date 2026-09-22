@@ -2149,7 +2149,22 @@ Four pages, each loading the source directly through an import map so they run f
 
 - [ ] **Step 2: Write `examples/board.html`**
 
-Same `<head>` block as Step 1, with the title changed. Body:
+Same `<head>` block as Step 1 with the title changed, **except the style rule**,
+which must target the light-DOM element that is actually on this page:
+
+```css
+    granite-launchpad-board { --granite-launchpad-pad-size: 3rem; }
+```
+
+Step 1's `granite-launchpad-pad { … }` is a type selector. It matches only pads
+in the page's own light DOM, and this page has none – its 80 pads live inside
+the board's shadow root, where a page-level type selector cannot reach them.
+Setting the custom property on the board host works because custom properties
+inherit through the shadow boundary. 3rem rather than 6rem because nine of them
+plus gaps is the width of the whole board: 6rem would make it about 900px wide
+and force horizontal scrolling on a laptop.
+
+Body:
 
 ```html
   <h1>The board</h1>
@@ -2175,7 +2190,11 @@ Same `<head>` block as Step 1, with the title changed. Body:
 
 The board wired to the hardware by hand, which is what the twin does for you – kept as the worked example of the manual path.
 
-Add to the import map: `"launchpad-webmidi": "../node_modules/launchpad-webmidi/dist/launchpad-webmidi.es.js"`. Body:
+Same `<head>` as Step 2, including `granite-launchpad-board { --granite-launchpad-pad-size: 3rem; }`
+and with the title changed, plus one import-map entry:
+`"launchpad-webmidi": "../node_modules/launchpad-webmidi/dist/launchpad-webmidi.es.js"`.
+
+Body:
 
 ```html
   <h1>The board, wired to hardware by hand</h1>
@@ -2219,7 +2238,12 @@ Add to the import map: `"launchpad-webmidi": "../node_modules/launchpad-webmidi/
 The same behaviour as Step 3, through the twin, to show what it removes.
 
 Its `<head>` needs the **same import map as Step 3**, including the
-`launchpad-webmidi` entry, not Step 1's. The page imports `../twin.js`, which
+`launchpad-webmidi` entry, not Step 1's. Its style rule targets the twin, which
+is the light-DOM element here:
+
+```css
+    granite-launchpad { --granite-launchpad-pad-size: 3rem; }
+``` The page imports `../twin.js`, which
 re-exports `src/granite-launchpad.js`, which begins
 `import Launchpad from 'launchpad-webmidi'`. That bare specifier is part of the
 module graph the browser resolves before a line of the page runs, so without the
