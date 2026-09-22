@@ -2356,7 +2356,15 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
 1. `# granite-launchpad` – one-line description, then what it is: three Lit elements, a board you can play on screen and a twin of a real Launchpad Mini.
 2. `## Contents` – a link list of the sections below.
 3. `## Requirements` – a modern browser; the twin additionally needs the Web MIDI API and a Launchpad Mini. Link MDN's Web MIDI browser-support table.
-4. `## Installation` – `npm install @granite-elements/granite-launchpad`, and the `esm.sh` import map for a page with no build:
+4. `## Installation` – `npm install @granite-elements/granite-launchpad`, **and
+   the two entry points, stated here rather than left to be discovered**: the
+   bare specifier registers `<granite-launchpad-pad>` and
+   `<granite-launchpad-board>` only, while `@granite-elements/granite-launchpad/twin.js`
+   additionally registers `<granite-launchpad>`. Say why: importing the board
+   never loads MIDI code. Say what going wrong looks like, because it is silent
+   – an unregistered custom element renders as an empty inline box, raises no
+   error, and simply never connects. Then the `esm.sh` import map for a page
+   with no build, with **both** keys:
 
    ```html
    <script type="importmap">
@@ -2369,12 +2377,20 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
    </script>
    ```
    The import map must come before any module script that relies on it.
-5. `## The three elements` – the table of tags and roles from the spec, and the nesting example.
+5. `## The three elements` – the table of tags and roles from the spec, and the
+   nesting example. Every code sample that uses `<granite-launchpad>` shows the
+   `twin.js` import beside it; every sample that does not, shows the bare
+   specifier. A reader copies the nearest import, so the nearest import must be
+   the right one.
 6. `## Getting started` – the `examples/board.html` body as the worked example.
 7. `## Coordinates` – the ASCII diagram from the spec, verbatim, with the three bullets under it.
 8. `## Colours` – the canonical strings, the parse table from the spec, the note that full brightness is written as the bare hue, and that yellow clamps to full because the hardware cannot dim it.
 9. `## Styling` – the 11 colour tokens, `--granite-launchpad-pad-size`, `--granite-launchpad-gap`, `--granite-launchpad-glow`.
-10. `## API` – every property, method and event of all three elements, in three tables copied from the spec's element sections.
+10. `## API` – every property, method and event of all three elements, in three
+    tables copied from the spec's element sections. The twin's `error` is the
+    reason the connection failed **or** the error thrown when the hardware went
+    away mid-session – one field, both causes. Do not describe it as only a
+    `connect()` failure.
 11. `## The twin` – `auto-connect`, the `state` values, handling
     `launchpad-error`, and the `launchpad` property for injecting a fake. Say
     plainly that with `auto-connect` the connection can finish before a script
