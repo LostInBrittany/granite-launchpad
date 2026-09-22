@@ -95,3 +95,31 @@ jobs:
             exit 1
           fi
           echo "board entry point is MIDI-free"
+
+  examples:
+    name: Examples resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - run: npm ci
+
+      # The examples are plain HTML importing source and node_modules by
+      # relative path. A renamed or dropped file would break them silently.
+      - name: Paths in the examples exist
+        run: |
+          rc=0
+          for ref in $(grep -ho '"\.\./[A-Za-z0-9@/._-]*"' examples/*.html | tr -d '"' | sort -u); do
+            file="${ref#../}"
+            if [ -e "$file" ]; then
+              echo "ok      $ref"
+            else
+              echo "MISSING $ref" >&2
+              rc=1
+            fi
+          done
+          exit $rc

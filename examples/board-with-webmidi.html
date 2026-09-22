@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>granite-launchpad – the board, wired to hardware by hand</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #17171a; color: #eee; padding: 2rem; }
+    granite-launchpad-pad { --granite-launchpad-pad-size: 6rem; }
+  </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "lit": "../node_modules/lit/index.js",
+        "lit/": "../node_modules/lit/",
+        "@lit/reactive-element": "../node_modules/@lit/reactive-element/reactive-element.js",
+        "@lit/reactive-element/": "../node_modules/@lit/reactive-element/",
+        "lit-html": "../node_modules/lit-html/lit-html.js",
+        "lit-html/": "../node_modules/lit-html/",
+        "lit-element/lit-element.js": "../node_modules/lit-element/lit-element.js",
+        "launchpad-webmidi": "../node_modules/launchpad-webmidi/dist/launchpad-webmidi.es.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <h1>The board, wired to hardware by hand</h1>
+  <p id="status">Connecting…</p>
+
+  <granite-launchpad-board id="board"></granite-launchpad-board>
+
+  <script type="module">
+    import '../index.js';
+    import Launchpad from 'launchpad-webmidi';
+
+    const board = document.querySelector( '#board' );
+    const status = document.querySelector( '#status' );
+    const pad = new Launchpad();
+    let connected = false;
+
+    const paint = ( x, y, color ) => {
+      board.setColor( x, y, color );
+      if ( connected ) {
+        const { hue, level } = { red: { hue: 'red', level: 3 }, green: { hue: 'green', level: 3 }, off: { hue: 'off', level: 0 } }[ color ];
+        pad.col( hue === 'off' ? pad.off : pad[ hue ].level( level ), [ x, y ] );
+      }
+    };
+
+    board.addEventListener( 'pad-press', ( e ) => paint( e.detail.x, e.detail.y, 'green' ) );
+    board.addEventListener( 'pad-release', ( e ) => paint( e.detail.x, e.detail.y, 'red' ) );
+
+    try {
+      await pad.connect();
+      connected = true;
+      status.textContent = 'Launchpad connected.';
+      pad.on( 'key', ( k ) => paint( k.x, k.y, k.pressed ? 'green' : 'red' ) );
+    } catch ( error ) {
+      status.textContent = `No Launchpad: ${ error }. The board still works on screen.`;
+    }
+  </script>
+</body>
+</html>
