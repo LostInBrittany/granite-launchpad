@@ -396,7 +396,7 @@ and bower.json was the only manifest, so none of it has run in a browser
 since 2019.
 
 In its place, the package manifest, a web-test-runner suite on Playwright
-Chromium, and src/lib/colors.js - the one module that turns a colour
+Chromium, and src/lib/colors.js – the one module that turns a colour
 string into a hue and a brightness level. Full brightness is written as
 the bare hue, so every colour string the old element accepted still means
 what it meant. Yellow clamps to full because the hardware cannot dim it."
@@ -1074,6 +1074,26 @@ describe( 'granite-launchpad-board colours', () => {
     expect( el.padAt( 4, 4 ).color ).to.equal( 'off' );
   } );
 
+  it( 'warns on both reads and writes off the board, but only when debug is set', async () => {
+    const quiet = await board();
+    const loud = await fixture( html`<granite-launchpad-board debug></granite-launchpad-board>` );
+    const original = console.warn;
+    const warnings = [];
+    console.warn = ( ...args ) => warnings.push( args.join( ' ' ) );
+    try {
+      quiet.setColor( 8, 8, 'red' );
+      quiet.getColor( 8, 8 );
+      expect( warnings, 'silent without debug' ).to.be.empty;
+
+      loud.setColor( 8, 8, 'red' );
+      expect( warnings ).to.have.lengthOf( 1 );
+      loud.getColor( 8, 8 );
+      expect( warnings, 'a read off the board warns too' ).to.have.lengthOf( 2 );
+    } finally {
+      console.warn = original;
+    }
+  } );
+
   it( 'ignores coordinates that are not on the board', async () => {
     const el = await board();
     for ( const [ x, y ] of [ [ -1, 0 ], [ 0, -1 ], [ 9, 0 ], [ 0, 9 ], [ 8, 8 ] ] ) {
@@ -1214,11 +1234,15 @@ export class GraniteLaunchpadBoard extends LitElement {
    * @param {Number} y Row, 0-8, where 8 is the Automap row
    * @param {String} color Any colour string
    */
+  #warnOffBoard( x, y ) {
+    if ( this.debug ) {
+      console.warn( `[granite-launchpad-board] no pad at ${ x },${ y }` );
+    }
+  }
+
   setColor( x, y, color ) {
     if ( !onBoard( x, y ) ) {
-      if ( this.debug ) {
-        console.warn( `[granite-launchpad-board] no pad at ${ x },${ y }` );
-      }
+      this.#warnOffBoard( x, y );
       return;
     }
     this.#colors[ index( x, y ) ] = normalizeColor( color, { debug: this.debug } );
@@ -1241,7 +1265,11 @@ export class GraniteLaunchpadBoard extends LitElement {
    * @return {String|undefined} The canonical colour, or undefined off the board
    */
   getColor( x, y ) {
-    return onBoard( x, y ) ? this.#colors[ index( x, y ) ] : undefined;
+    if ( !onBoard( x, y ) ) {
+      this.#warnOffBoard( x, y );
+      return undefined;
+    }
+    return this.#colors[ index( x, y ) ];
   }
 
   /** Turn every pad off. */
@@ -1280,7 +1308,7 @@ git add src/granite-launchpad-board.js spec/granite-launchpad-board.test.js
 git commit -m "Add granite-launchpad-board
 
 One nine by nine CSS Grid with the corner cell left empty, replacing the
-three hand-aligned grids of the 2018 element - which is why every
+three hand-aligned grids of the 2018 element – which is why every
 dimension there was frozen at 50px.
 
 Coordinates are (x, y), matching launchpad-webmidi, so setColor(x, y, c)
@@ -1653,10 +1681,14 @@ export class GraniteLaunchpad extends LitElement {
    */
   setColor( x, y, color ) {
     const board = this.board;
-    if ( !board || board.getColor( x, y ) === undefined ) {
+    if ( !board ) {
       if ( this.debug ) {
-        console.warn( `[granite-launchpad] no pad at ${ x },${ y }` );
+        console.warn( '[granite-launchpad] no board to paint' );
       }
+      return;
+    }
+    // The board warns for itself when debug is set, so this does not repeat it.
+    if ( board.getColor( x, y ) === undefined ) {
       return;
     }
     board.setColor( x, y, color );
@@ -1737,7 +1769,7 @@ working twin and the slotted form exists for when the board needs its own
 attributes.
 
 Colour travels outward only: setColor paints the board and sends to the
-hardware, and a press - from either side - changes nothing. That is what
+hardware, and a press – from either side – changes nothing. That is what
 keeps the mirroring loop-free.
 
 connect() resolves false rather than rejecting, and sets state and error.
@@ -1954,7 +1986,7 @@ the twin and with it launchpad-webmidi. A CI job greps for the import to
 keep that true.
 
 Element registration is guarded on customElements existing, so the
-modules import cleanly under Node - which is what the packed-tarball job
+modules import cleanly under Node – which is what the packed-tarball job
 does to check that files and exports actually resolve.
 
 Publishing is trusted publishing over OIDC with provenance, as in
@@ -2335,7 +2367,7 @@ README covering the three elements, the coordinate system, the colour
 strings, the styling tokens, the full API and a migration table for
 anyone arriving from the Polymer element.
 
-CHANGELOG starts at 1.0.0 - the scoped package has never been published -
+CHANGELOG starts at 1.0.0 – the scoped package has never been published –
 and records the 2018 Polymer elements as 0.1.0 so the rewrite has visible
 provenance."
 ```
