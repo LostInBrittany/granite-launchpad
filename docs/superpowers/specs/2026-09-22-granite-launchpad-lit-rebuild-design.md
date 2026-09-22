@@ -353,9 +353,21 @@ numeric levels, the yellow clamp and invalid input.
 
 **`<granite-launchpad-pad>`** – renders; `color` maps to the expected custom
 property; an invalid colour falls back to `off`; `pointerdown` and `pointerup`
-emit press and release; a pointer released outside the pad still releases it;
-touch input behaves as pointer input; Space and Enter emit the same pair;
-`disabled` suppresses all of it; ARIA attributes are present and correct.
+emit press and release; Space and Enter emit the same pair; `disabled`
+suppresses all of it; ARIA attributes are present and correct.
+
+Two items this list originally promised are deliberately not tested, recorded
+here rather than left unaccounted for:
+
+- *A pointer released outside the pad still releases it.* This is
+  `setPointerCapture()`'s job, and a synthetic `PointerEvent` has no real
+  pointer to capture – which is why the call sits in a `try`/`catch`. A test
+  would exercise the catch, not the behaviour. Covered instead by
+  `pointercancel` and by the detach-while-held test.
+- *Touch input behaves as pointer input.* Nothing in the handlers reads
+  `pointerType`, so a test passing `pointerType: 'touch'` would assert that a
+  branch which does not exist was not taken. Touch support comes from using
+  Pointer Events at all, plus `touch-action: none`.
 
 **`<granite-launchpad-board>`** – renders 80 pads, the 9 × 9 grid less the
 corner, with no pad at `(8, 8)`;
