@@ -101,6 +101,28 @@ export class GraniteLaunchpadPad extends LitElement {
     return this.#color;
   }
 
+  #pressed = false;
+
+  connectedCallback() {
+    super.connectedCallback();
+    this.addEventListener( 'pointerdown', this.#onPointerDown );
+    this.addEventListener( 'pointerup', this.#onPointerUp );
+    this.addEventListener( 'pointercancel', this.#onPointerUp );
+    this.addEventListener( 'keydown', this.#onKeyDown );
+    this.addEventListener( 'keyup', this.#onKeyUp );
+    this.addEventListener( 'blur', this.#onBlur );
+  }
+
+  disconnectedCallback() {
+    this.removeEventListener( 'pointerdown', this.#onPointerDown );
+    this.removeEventListener( 'pointerup', this.#onPointerUp );
+    this.removeEventListener( 'pointercancel', this.#onPointerUp );
+    this.removeEventListener( 'keydown', this.#onKeyDown );
+    this.removeEventListener( 'keyup', this.#onKeyUp );
+    this.removeEventListener( 'blur', this.#onBlur );
+    super.disconnectedCallback();
+  }
+
   willUpdate() {
     // Not `reflect: true`: Lit suppresses reflection while it handles an
     // attribute-to-property change, so a canonicalising property would leave
@@ -108,7 +130,93 @@ export class GraniteLaunchpadPad extends LitElement {
     if ( this.getAttribute( 'color' ) !== this.#color ) {
       this.setAttribute( 'color', this.#color );
     }
+    this.setAttribute( 'role', 'button' );
+    this.setAttribute( 'tabindex', this.disabled ? '-1' : '0' );
+    this.setAttribute( 'aria-label', this.label ?? this.#positionLabel() );
+    if ( this.disabled ) {
+      this.setAttribute( 'aria-disabled', 'true' );
+    } else {
+      this.removeAttribute( 'aria-disabled' );
+    }
   }
+
+  #positionLabel() {
+    if ( this.x === undefined || this.y === undefined ) {
+      return 'Pad';
+    }
+    if ( this.y === 8 ) {
+      return `Automap ${ this.x }`;
+    }
+    if ( this.x === 8 ) {
+      return `Scene ${ this.y }`;
+    }
+    return `Pad ${ this.x },${ this.y }`;
+  }
+
+  #press() {
+    if ( this.disabled || this.#pressed ) {
+      return;
+    }
+    this.#pressed = true;
+    this.#emit( 'pad-press' );
+  }
+
+  #release() {
+    if ( !this.#pressed ) {
+      return;
+    }
+    this.#pressed = false;
+    this.#emit( 'pad-release' );
+  }
+
+  #emit( type ) {
+    this.dispatchEvent( new CustomEvent( type, {
+      bubbles: true,
+      composed: true,
+      detail: { x: this.x, y: this.y, color: this.color },
+    } ) );
+  }
+
+  #onPointerDown = ( event ) => {
+    if ( this.disabled ) {
+      return;
+    }
+    // Capture so a pointer released outside this pad still releases it. The
+    // 2018 element watched mouseout instead, which missed touch entirely.
+    try {
+      this.setPointerCapture( event.pointerId );
+    } catch {
+      // A synthetic PointerEvent has no real pointer to capture.
+    }
+    this.#press();
+  };
+
+  #onPointerUp = ( event ) => {
+    if ( this.hasPointerCapture?.( event.pointerId ) ) {
+      this.releasePointerCapture( event.pointerId );
+    }
+    this.#release();
+  };
+
+  #onKeyDown = ( event ) => {
+    if ( event.key !== ' ' && event.key !== 'Enter' ) {
+      return;
+    }
+    event.preventDefault();
+    if ( event.repeat ) {
+      return;
+    }
+    this.#press();
+  };
+
+  #onKeyUp = ( event ) => {
+    if ( event.key !== ' ' && event.key !== 'Enter' ) {
+      return;
+    }
+    this.#release();
+  };
+
+  #onBlur = () => this.#release();
 
   render() {
     return html``;

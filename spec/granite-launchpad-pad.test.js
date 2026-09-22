@@ -59,3 +59,131 @@ describe( 'granite-launchpad-pad rendering', () => {
       .to.not.equal( getComputedStyle( round ).borderRadius );
   } );
 } );
+
+import { oneEvent } from '@open-wc/testing';
+
+const pointer = ( type, init = {} ) =>
+  new PointerEvent( type, { pointerId: 1, bubbles: true, composed: true, ...init } );
+
+describe( 'granite-launchpad-pad interaction', () => {
+  it( 'emits pad-press on pointerdown, carrying its coordinates and colour', async () => {
+    const el = await fixture( html`<granite-launchpad-pad .x=${ 3 } .y=${ 5 } color="amber low"></granite-launchpad-pad>` );
+    setTimeout( () => el.dispatchEvent( pointer( 'pointerdown' ) ) );
+    const { detail } = await oneEvent( el, 'pad-press' );
+    expect( detail ).to.deep.equal( { x: 3, y: 5, color: 'amber low' } );
+  } );
+
+  it( 'emits pad-release on pointerup', async () => {
+    const el = await fixture( html`<granite-launchpad-pad .x=${ 1 } .y=${ 2 }></granite-launchpad-pad>` );
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    setTimeout( () => el.dispatchEvent( pointer( 'pointerup' ) ) );
+    const { detail } = await oneEvent( el, 'pad-release' );
+    expect( detail ).to.deep.equal( { x: 1, y: 2, color: 'off' } );
+  } );
+
+  it( 'escapes the shadow root, so a host can hear it', async () => {
+    const wrapper = await fixture( html`<div><granite-launchpad-pad .x=${ 0 } .y=${ 0 }></granite-launchpad-pad></div>` );
+    const el = wrapper.firstElementChild;
+    setTimeout( () => el.dispatchEvent( pointer( 'pointerdown' ) ) );
+    const event = await oneEvent( wrapper, 'pad-press' );
+    expect( event.composed ).to.be.true;
+    expect( event.bubbles ).to.be.true;
+  } );
+
+  it( 'releases on pointercancel, so a press is never left stuck', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    setTimeout( () => el.dispatchEvent( pointer( 'pointercancel' ) ) );
+    await oneEvent( el, 'pad-release' );
+  } );
+
+  it( 'ignores a pointerup it never saw a pointerdown for', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    let released = 0;
+    el.addEventListener( 'pad-release', () => { released += 1; } );
+    el.dispatchEvent( pointer( 'pointerup' ) );
+    el.dispatchEvent( pointer( 'pointerup' ) );
+    expect( released ).to.equal( 0 );
+  } );
+
+  it( 'does not repeat a press while the pointer is held', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    let pressed = 0;
+    el.addEventListener( 'pad-press', () => { pressed += 1; } );
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    expect( pressed ).to.equal( 1 );
+  } );
+
+  it( 'plays from the keyboard', async () => {
+    for ( const key of [ ' ', 'Enter' ] ) {
+      const el = await fixture( html`<granite-launchpad-pad .x=${ 4 } .y=${ 4 }></granite-launchpad-pad>` );
+      setTimeout( () => el.dispatchEvent( new KeyboardEvent( 'keydown', { key, bubbles: true } ) ) );
+      await oneEvent( el, 'pad-press' );
+      setTimeout( () => el.dispatchEvent( new KeyboardEvent( 'keyup', { key, bubbles: true } ) ) );
+      await oneEvent( el, 'pad-release' );
+    }
+  } );
+
+  it( 'ignores an auto-repeating key', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    let pressed = 0;
+    el.addEventListener( 'pad-press', () => { pressed += 1; } );
+    el.dispatchEvent( new KeyboardEvent( 'keydown', { key: ' ', bubbles: true } ) );
+    el.dispatchEvent( new KeyboardEvent( 'keydown', { key: ' ', repeat: true, bubbles: true } ) );
+    expect( pressed ).to.equal( 1 );
+  } );
+
+  it( 'releases when focus leaves while held', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    el.dispatchEvent( new KeyboardEvent( 'keydown', { key: ' ', bubbles: true } ) );
+    setTimeout( () => el.dispatchEvent( new FocusEvent( 'blur' ) ) );
+    await oneEvent( el, 'pad-release' );
+  } );
+
+  it( 'emits nothing at all when disabled', async () => {
+    const el = await fixture( html`<granite-launchpad-pad disabled></granite-launchpad-pad>` );
+    let events = 0;
+    el.addEventListener( 'pad-press', () => { events += 1; } );
+    el.addEventListener( 'pad-release', () => { events += 1; } );
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    el.dispatchEvent( pointer( 'pointerup' ) );
+    el.dispatchEvent( new KeyboardEvent( 'keydown', { key: ' ', bubbles: true } ) );
+    expect( events ).to.equal( 0 );
+  } );
+} );
+
+describe( 'granite-launchpad-pad accessibility', () => {
+  it( 'is a focusable button', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    expect( el.getAttribute( 'role' ) ).to.equal( 'button' );
+    expect( el.getAttribute( 'tabindex' ) ).to.equal( '0' );
+  } );
+
+  it( 'leaves the tab order and says so when disabled', async () => {
+    const el = await fixture( html`<granite-launchpad-pad disabled></granite-launchpad-pad>` );
+    await elementUpdated( el );
+    expect( el.getAttribute( 'tabindex' ) ).to.equal( '-1' );
+    expect( el.getAttribute( 'aria-disabled' ) ).to.equal( 'true' );
+  } );
+
+  it( 'names itself by position', async () => {
+    const grid = await fixture( html`<granite-launchpad-pad .x=${ 3 } .y=${ 5 }></granite-launchpad-pad>` );
+    await elementUpdated( grid );
+    expect( grid.getAttribute( 'aria-label' ) ).to.equal( 'Pad 3,5' );
+
+    const automap = await fixture( html`<granite-launchpad-pad .x=${ 3 } .y=${ 8 }></granite-launchpad-pad>` );
+    await elementUpdated( automap );
+    expect( automap.getAttribute( 'aria-label' ) ).to.equal( 'Automap 3' );
+
+    const scene = await fixture( html`<granite-launchpad-pad .x=${ 8 } .y=${ 5 }></granite-launchpad-pad>` );
+    await elementUpdated( scene );
+    expect( scene.getAttribute( 'aria-label' ) ).to.equal( 'Scene 5' );
+  } );
+
+  it( 'takes an explicit label over the computed one', async () => {
+    const el = await fixture( html`<granite-launchpad-pad .x=${ 0 } .y=${ 0 } label="Kick"></granite-launchpad-pad>` );
+    await elementUpdated( el );
+    expect( el.getAttribute( 'aria-label' ) ).to.equal( 'Kick' );
+  } );
+} );
