@@ -180,7 +180,24 @@ export class GraniteLaunchpad extends LitElement {
     }
     const { hue, level } = parseColor( color, { debug: this.debug } );
     const value = hue === 'off' ? this.launchpad.off : this.launchpad[ hue ].level( level );
-    this.launchpad.col( value, [ x, y ] );
+    try {
+      this.launchpad.col( value, [ x, y ] );
+    } catch ( error ) {
+      // launchpad-webmidi's sendRaw() is a bare MIDIOutput.send(), which
+      // throws synchronously once the port is gone - a Launchpad unplugged
+      // mid-session. Without this, every setColor() after that would throw at
+      // the page, having already painted the board.
+      //
+      // The board keeps working on screen, the page is told once, and later
+      // writes skip the hardware on their own because #send returns early on
+      // any state other than 'connected'.
+      this.state = 'error';
+      this.error = error;
+      if ( this.debug ) {
+        console.warn( '[granite-launchpad] lost the Launchpad:', error );
+      }
+      this.#fire( 'launchpad-error', { error } );
+    }
   }
 
   #onKey = ( key ) => {

@@ -149,6 +149,41 @@ describe( 'granite-launchpad mirroring', () => {
     expect( fake.calls ).to.be.empty;
   } );
 
+  it( 'survives the Launchpad being unplugged mid-session', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await twinWith( fake );
+    await el.connect();
+
+    const boom = new Error( 'port is gone' );
+    fake.breakOutput( boom );
+
+    const failed = oneEvent( el, 'launchpad-error' );
+    el.setColor( 3, 5, 'red' );
+    const event = await failed;
+    await elementUpdated( el );
+
+    expect( el.board.getColor( 3, 5 ), 'the board still paints' ).to.equal( 'red' );
+    expect( el.state ).to.equal( 'error' );
+    expect( el.error ).to.equal( boom );
+    expect( event.detail.error ).to.equal( boom );
+  } );
+
+  it( 'reports a lost Launchpad once, not once per write', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await twinWith( fake );
+    await el.connect();
+    fake.breakOutput( new Error( 'port is gone' ) );
+
+    let errors = 0;
+    el.addEventListener( 'launchpad-error', () => { errors += 1; } );
+    el.setColor( 0, 0, 'red' );
+    el.setColor( 1, 1, 'green' );
+    await elementUpdated( el );
+
+    expect( errors ).to.equal( 1 );
+    expect( el.board.getColor( 1, 1 ), 'the screen keeps working' ).to.equal( 'green' );
+  } );
+
   it( 'clears both sides', async () => {
     const fake = new FakeLaunchpad();
     const el = await twinWith( fake );
