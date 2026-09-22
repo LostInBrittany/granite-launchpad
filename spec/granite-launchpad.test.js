@@ -167,6 +167,19 @@ describe( 'granite-launchpad mirroring', () => {
     expect( fake.calls ).to.be.empty;
   } );
 
+  it( 'delivers a screen press once through both shadow boundaries', async () => {
+    // pad-press is composed, so it crosses the board's shadow root and the
+    // twin's on its own - nothing here re-dispatches it. If anything ever
+    // did, every press would arrive twice.
+    const el = await twinWith( new FakeLaunchpad() );
+    await elementUpdated( el );
+    let count = 0;
+    el.addEventListener( 'pad-press', () => { count += 1; } );
+    el.board.padAt( 0, 0 ).dispatchEvent(
+      new PointerEvent( 'pointerdown', { pointerId: 1, bubbles: true, composed: true } ) );
+    expect( count ).to.equal( 1 );
+  } );
+
   it( 'survives the Launchpad being unplugged mid-session', async () => {
     const fake = new FakeLaunchpad();
     const el = await twinWith( fake );
