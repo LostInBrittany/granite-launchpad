@@ -36,3 +36,62 @@ jobs:
       - run: npx playwright install --with-deps chromium
 
       - run: npm test
+
+  package:
+    name: Package contents
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - run: npm ci
+
+      # Both entry points resolve against a real install of the real tarball.
+      # There is no build step here, so what breaks is a path in "files" or in
+      # "exports", and only an install shows that.
+      - name: Install the packed tarball and resolve both entry points
+        run: |
+          npm pack --pack-destination /tmp
+          mkdir -p /tmp/consumer && cd /tmp/consumer
+          npm init -y >/dev/null
+          npm install /tmp/granite-elements-granite-launchpad-*.tgz
+          node -e "
+            const { createRequire } = require('node:module');
+            const resolve = createRequire('/tmp/consumer/').resolve;
+            for (const spec of [
+              '@granite-elements/granite-launchpad',
+              '@granite-elements/granite-launchpad/twin.js',
+            ]) {
+              console.log(spec, '->', resolve(spec));
+            }
+          "
+          node --input-type=module -e "
+            const m = await import('@granite-elements/granite-launchpad');
+            for (const name of ['GraniteLaunchpadPad', 'GraniteLaunchpadBoard', 'parseColor']) {
+              if (!m[name]) throw new Error(name + ' missing from the main entry point');
+            }
+            console.log('main entry point ok');
+          "
+          node --input-type=module -e "
+            const m = await import('@granite-elements/granite-launchpad/twin.js');
+            if (!m.GraniteLaunchpad) throw new Error('GraniteLaunchpad missing from twin.js');
+            console.log('twin entry point ok');
+          "
+
+      # The board must not drag MIDI code in. Only twin.js may mention it.
+      - name: The board entry point does not reach launchpad-webmidi
+        run: |
+          # Match the package name only where it is a module specifier, which
+          # means preceded by a quote. This catches static imports, dynamic
+          # import(), require() and re-exports alike, and deliberately does not
+          # catch prose: these files mention launchpad-webmidi in comments to
+          # explain why yellow clamps to full and where setColors' argument
+          # shape comes from, and that documentation earns its place.
+          if grep -rn -e "'launchpad-webmidi" -e '"launchpad-webmidi' index.js src/granite-launchpad-pad.js src/granite-launchpad-board.js src/lib/; then
+            echo "The board entry point imports launchpad-webmidi; only twin.js may." >&2
+            exit 1
+          fi
+          echo "board entry point is MIDI-free"

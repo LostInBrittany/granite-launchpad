@@ -1,0 +1,70 @@
+name: Publish to npm
+
+# Publishing is deliberate: it happens when a GitHub release is published,
+# never on a plain tag push.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Skip the actual publish, only report the environment'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write # required for npm trusted publishing and provenance
+
+jobs:
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      # Deliberately no `registry-url`: it makes setup-node write an .npmrc
+      # containing `_authToken=${NODE_AUTH_TOKEN}`, and with no token supplied
+      # that expands to a placeholder. npm then authenticates with the bogus
+      # token instead of exchanging the OIDC credential, and publishing fails
+      # with a 404. Trusted publishing needs no .npmrc at all.
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Install
+        run: npm ci
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test
+
+      - name: Check the release tag matches package.json
+        if: github.event_name == 'release'
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "Release tag ${GITHUB_REF_NAME} does not match package.json version ${pkg}" >&2
+            exit 1
+          fi
+          echo "Publishing ${pkg}"
+
+      # No token: the workflow authenticates to npm over OIDC, which also
+      # attaches provenance linking the tarball to this commit and run.
+      # --access public because a scoped package is private by default.
+      - name: Publish
+        if: github.event_name == 'release' || inputs.dry_run == false
+        run: npm publish --provenance --access public --loglevel verbose
+
+      - name: Report what npm attempted
+        if: failure()
+        run: |
+          echo "registry: $(npm config get registry)"
+          for f in ~/.npm/_logs/*.log; do
+            echo "=== $f ==="
+            grep -iE 'oidc|trusted|provenance|id-token|audience|http fetch|ENEEDAUTH|401|403' "$f" | head -40
+          done
