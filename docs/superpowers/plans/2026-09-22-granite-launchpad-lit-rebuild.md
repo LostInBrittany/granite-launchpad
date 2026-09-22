@@ -2218,6 +2218,14 @@ Add to the import map: `"launchpad-webmidi": "../node_modules/launchpad-webmidi/
 
 The same behaviour as Step 3, through the twin, to show what it removes.
 
+Its `<head>` needs the **same import map as Step 3**, including the
+`launchpad-webmidi` entry, not Step 1's. The page imports `../twin.js`, which
+re-exports `src/granite-launchpad.js`, which begins
+`import Launchpad from 'launchpad-webmidi'`. That bare specifier is part of the
+module graph the browser resolves before a line of the page runs, so without the
+entry the page dies with a module-resolution error instead of reporting a
+missing Launchpad on screen – the precise failure the twin exists to prevent.
+
 ```html
   <h1>The digital twin</h1>
   <p id="status">Connecting…</p>
