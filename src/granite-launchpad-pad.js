@@ -114,6 +114,11 @@ export class GraniteLaunchpadPad extends LitElement {
   }
 
   disconnectedCallback() {
+    // A detached pad cannot receive the pointerup or keyup that would release
+    // it, so clear the flag here. Otherwise the same element instance,
+    // reattached, would emit a pad-release with no matching pad-press and
+    // swallow the pointerdown that should have started the next press.
+    this.#pressed = false;
     this.removeEventListener( 'pointerdown', this.#onPointerDown );
     this.removeEventListener( 'pointerup', this.#onPointerUp );
     this.removeEventListener( 'pointercancel', this.#onPointerUp );

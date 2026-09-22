@@ -97,6 +97,18 @@ describe( 'granite-launchpad-pad interaction', () => {
     await oneEvent( el, 'pad-release' );
   } );
 
+  it( 'clears a held press when detached, so a reattached pad starts clean', async () => {
+    const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
+    const parent = el.parentNode;
+    el.dispatchEvent( pointer( 'pointerdown' ) );
+    parent.removeChild( el );
+    parent.appendChild( el );
+    let released = 0;
+    el.addEventListener( 'pad-release', () => { released += 1; } );
+    el.dispatchEvent( pointer( 'pointerup' ) );
+    expect( released ).to.equal( 0 );
+  } );
+
   it( 'ignores a pointerup it never saw a pointerdown for', async () => {
     const el = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
     let released = 0;

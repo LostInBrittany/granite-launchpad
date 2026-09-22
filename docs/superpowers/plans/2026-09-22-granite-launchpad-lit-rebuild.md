@@ -819,6 +819,11 @@ Add to the class body of `src/granite-launchpad-pad.js`:
   }
 
   disconnectedCallback() {
+    // A detached pad cannot receive the pointerup or keyup that would release
+    // it, so clear the flag here. Otherwise the same element instance,
+    // reattached, would emit a pad-release with no matching pad-press and
+    // swallow the pointerdown that should have started the next press.
+    this.#pressed = false;
     this.removeEventListener( 'pointerdown', this.#onPointerDown );
     this.removeEventListener( 'pointerup', this.#onPointerUp );
     this.removeEventListener( 'pointercancel', this.#onPointerUp );
@@ -2214,7 +2219,17 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
 11. `## The twin` – `auto-connect`, the `state` values, handling `launchpad-error`, and the `launchpad` property for injecting a fake.
 12. `## Examples` – one line per file in `examples/`, and the `npx http-server` command.
 13. `## Coming from the Polymer element` – the migration table from the spec, verbatim.
-14. `## Known limitations` – double buffering, multiplexing and global brightness are not mirrored: a flashing LED renders as steady. Also: every pad is its own tab stop, so tabbing across the board takes 80 stops – arrow-key navigation with a roving tabindex is a candidate for a later release.
+14. `## Known limitations` – three, each stated plainly:
+    - Double buffering, multiplexing and global brightness are not mirrored: a
+      flashing LED on the hardware renders as steady on screen.
+    - Every pad is its own tab stop, so tabbing across the board takes 80 stops.
+      Arrow-key navigation with a roving tabindex is a candidate for a later
+      release.
+    - Pads respond to pointer, touch, pen, Space and Enter, but not to a
+      synthesised `click`. Assistive technology that activates a `role="button"`
+      by dispatching `click` rather than key events will not play a pad. Handling
+      it needs care to avoid double-firing alongside the pointer sequence a real
+      mouse already produces, so it is deferred rather than guessed at.
 15. `## Changelog` – link to `CHANGELOG.md`.
 16. `## Licence` – MIT, link to `LICENCE.md`.
 
