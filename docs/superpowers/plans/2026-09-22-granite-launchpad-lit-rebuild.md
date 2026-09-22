@@ -1398,7 +1398,7 @@ export class FakeLaunchpad {
 
 ```js
 // spec/granite-launchpad.test.js
-import { expect, fixture, html, elementUpdated, oneEvent, aTimeout } from '@open-wc/testing';
+import { expect, fixture, fixtureSync, html, elementUpdated, oneEvent, aTimeout } from '@open-wc/testing';
 import { FakeLaunchpad } from './helpers/fake-launchpad.js';
 import '../src/granite-launchpad.js';
 
@@ -1454,9 +1454,26 @@ describe( 'granite-launchpad connection', () => {
 
   it( 'connects on its own when told to', async () => {
     const fake = new FakeLaunchpad();
-    const el = await fixture( html`<granite-launchpad auto-connect .launchpad=${ fake }></granite-launchpad>` );
-    await oneEvent( el, 'launchpad-connect' );
+    // fixtureSync, not fixture: Lit schedules the first update - and with it
+    // firstUpdated, and so the auto-connect - as a microtask. Awaiting
+    // fixture() drains that microtask, so a fake that resolves immediately is
+    // already connected and the event is long gone by the time a listener
+    // could be attached. Taking the element synchronously lets the listener
+    // exist before the connection starts, which is the order a real page has.
+    const el = fixtureSync( html`<granite-launchpad auto-connect .launchpad=${ fake }></granite-launchpad>` );
+    const connected = oneEvent( el, 'launchpad-connect' );
+    await connected;
     expect( el.state ).to.equal( 'connected' );
+    expect( fake.connected ).to.be.true;
+  } );
+
+  it( 'leaves its state readable for a listener that arrives late', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await fixture( html`<granite-launchpad auto-connect .launchpad=${ fake }></granite-launchpad>` );
+    // The connection has already finished here and the event cannot be caught
+    // any more. A page in that position reads the state instead.
+    expect( el.state ).to.equal( 'connected' );
+    expect( el.getAttribute( 'state' ) ).to.equal( 'connected' );
   } );
 
   it( 'stops listening after disconnect', async () => {
@@ -1624,9 +1641,17 @@ export class GraniteLaunchpad extends LitElement {
   }
 
   firstUpdated() {
-    if ( this.autoConnect ) {
-      this.connect();
+    if ( !this.autoConnect ) {
+      return;
     }
+    // connect() sets `state`, which is reactive. Setting it from inside
+    // firstUpdated schedules a second update from within the first, and Lit
+    // warns about that in dev builds (lit.dev/msg/change-in-update) - a
+    // warning every consumer of this component would see in their console.
+    // Waiting for the current update to finish costs nothing: a real
+    // connect() is a Web MIDI permission request, orders of magnitude longer
+    // than an update cycle.
+    this.updateComplete.then( () => this.connect() );
   }
 
   /**
@@ -2248,7 +2273,12 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
 8. `## Colours` – the canonical strings, the parse table from the spec, the note that full brightness is written as the bare hue, and that yellow clamps to full because the hardware cannot dim it.
 9. `## Styling` – the 11 colour tokens, `--granite-launchpad-pad-size`, `--granite-launchpad-gap`, `--granite-launchpad-glow`.
 10. `## API` – every property, method and event of all three elements, in three tables copied from the spec's element sections.
-11. `## The twin` – `auto-connect`, the `state` values, handling `launchpad-error`, and the `launchpad` property for injecting a fake.
+11. `## The twin` – `auto-connect`, the `state` values, handling
+    `launchpad-error`, and the `launchpad` property for injecting a fake. Say
+    plainly that with `auto-connect` the connection can finish before a script
+    later in the page attaches its listener, so `launchpad-connect` may be
+    missed; `state` is reflected as an attribute precisely so a page in that
+    position can read the outcome instead of racing for the event.
 12. `## Examples` – one line per file in `examples/`, and the `npx http-server` command.
 13. `## Coming from the Polymer element` – the migration table from the spec, verbatim.
 14. `## Known limitations` – three, each stated plainly:
