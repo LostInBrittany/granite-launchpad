@@ -93,15 +93,23 @@ import '@granite-elements/granite-launchpad/twin.js';
 ```
 
 ```html
+<granite-launchpad></granite-launchpad>
+```
+
+Give it an explicit `<granite-launchpad-board>` child only when the board
+needs its own attributes or styling. The twin renders that child as its
+`<slot>`'s fallback content, and fallback content is built whether or not
+anything is slotted, so the plain form above avoids constructing a second,
+unused board:
+
+```html
 <granite-launchpad>
   <granite-launchpad-board></granite-launchpad-board>
 </granite-launchpad>
 ```
 
-The explicit child above is only needed when the board needs its own
-attributes or styling – `<granite-launchpad></granite-launchpad>` on its own
-is a working twin. Note the import: `<granite-launchpad>` needs `/twin.js`, not
-the bare specifier – see [Installation](#installation).
+Note the import: `<granite-launchpad>` needs `/twin.js`, not the bare
+specifier – see [Installation](#installation).
 
 ## Getting started
 
