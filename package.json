@@ -1,6 +1,6 @@
 {
   "name": "@granite-elements/granite-launchpad",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Lit web components mimicking a Novation Launchpad Mini board, with a digital twin of a real one",
   "type": "module",
   "main": "index.js",

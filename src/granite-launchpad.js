@@ -166,35 +166,52 @@ export class GraniteLaunchpad extends LitElement {
     return this.board?.getColor( x, y );
   }
 
-  /** Turn every pad off, on screen and on the hardware. */
+  /**
+   * Turn every pad off, on screen and on the hardware.
+   *
+   * The hardware half is one Reset command rather than eighty colour writes,
+   * so a real board clears at once instead of sweeping across the grid. That
+   * command also clears device state this element does not manage - buffers,
+   * flashing and duty cycle - which matters only to a page reaching past the
+   * twin to `launchpad` directly.
+   */
   reset() {
-    for ( let y = 0; y <= 8; y += 1 ) {
-      for ( let x = 0; x <= 8; x += 1 ) {
-        if ( x === 8 && y === 8 ) {
-          continue;
-        }
-        this.setColor( x, y, 'off' );
-      }
+    const board = this.board;
+    if ( board ) {
+      board.reset();
+    } else if ( this.debug ) {
+      console.warn( '[granite-launchpad] no board to clear' );
     }
+    this.#toHardware( () => this.launchpad.reset( 0 ) );
   }
 
-  #send( x, y, color ) {
-    if ( this.state !== 'connected' || !this.launchpad ) {
+  /** Whether a hardware write can be attempted at all. */
+  #canWrite() {
+    return this.state === 'connected' && Boolean( this.launchpad );
+  }
+
+  /**
+   * Run one hardware write and survive the Launchpad going away.
+   *
+   * launchpad-webmidi sends through a bare MIDIOutput.send(), which throws
+   * synchronously once the port is gone - a Launchpad unplugged mid-session.
+   * Without this, the throw would reach whoever called setColor() or reset(),
+   * after the board had already painted.
+   *
+   * The board keeps working on screen, the page is told once, and later
+   * writes skip the hardware on their own because this returns early on any
+   * state other than 'connected'.
+   *
+   * @param {Function} write Touches the hardware and nothing else, so a
+   *   failure here can only mean the device.
+   */
+  #toHardware( write ) {
+    if ( !this.#canWrite() ) {
       return;
     }
-    const { hue, level } = parseColor( color, { debug: this.debug } );
-    const value = hue === 'off' ? this.launchpad.off : this.launchpad[ hue ].level( level );
     try {
-      this.launchpad.col( value, [ x, y ] );
+      write();
     } catch ( error ) {
-      // launchpad-webmidi's sendRaw() is a bare MIDIOutput.send(), which
-      // throws synchronously once the port is gone - a Launchpad unplugged
-      // mid-session. Without this, every setColor() after that would throw at
-      // the page, having already painted the board.
-      //
-      // The board keeps working on screen, the page is told once, and later
-      // writes skip the hardware on their own because #send returns early on
-      // any state other than 'connected'.
       this.state = 'error';
       this.error = error;
       if ( this.debug ) {
@@ -202,6 +219,17 @@ export class GraniteLaunchpad extends LitElement {
       }
       this.#fire( 'launchpad-error', { error } );
     }
+  }
+
+  #send( x, y, color ) {
+    // Guard before the palette lookup, which reads this.launchpad, and so
+    // that only the send itself sits inside #toHardware's try.
+    if ( !this.#canWrite() ) {
+      return;
+    }
+    const { hue, level } = parseColor( color, { debug: this.debug } );
+    const value = hue === 'off' ? this.launchpad.off : this.launchpad[ hue ].level( level );
+    this.#toHardware( () => this.launchpad.col( value, [ x, y ] ) );
   }
 
   #onKey = ( key ) => {

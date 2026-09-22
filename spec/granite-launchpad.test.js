@@ -215,7 +215,7 @@ describe( 'granite-launchpad mirroring', () => {
     expect( el.board.getColor( 1, 1 ), 'the screen keeps working' ).to.equal( 'green' );
   } );
 
-  it( 'clears both sides', async () => {
+  it( 'clears both sides, in one message rather than eighty', async () => {
     const fake = new FakeLaunchpad();
     const el = await twinWith( fake );
     await el.connect();
@@ -224,6 +224,30 @@ describe( 'granite-launchpad mirroring', () => {
     el.reset();
     await elementUpdated( el );
     expect( el.board.getColor( 4, 4 ) ).to.equal( 'off' );
-    expect( fake.calls ).to.have.lengthOf( 80 );
+    // One Reset command, not eighty colour writes - on a real board the
+    // difference is an instant clear rather than a sweep across the grid.
+    expect( fake.resets, 'one Reset command' ).to.deep.equal( [ 0 ] );
+    expect( fake.calls, 'and no per-pad writes' ).to.be.empty;
+  } );
+
+  it( 'survives the Launchpad being unplugged during a reset', async () => {
+    const fake = new FakeLaunchpad();
+    const el = await twinWith( fake );
+    await el.connect();
+    el.setColor( 4, 4, 'red' );
+    await elementUpdated( el );
+
+    const boom = new Error( 'port is gone' );
+    fake.breakOutput( boom );
+
+    const failed = oneEvent( el, 'launchpad-error' );
+    el.reset();
+    const event = await failed;
+    await elementUpdated( el );
+
+    expect( el.board.getColor( 4, 4 ), 'the screen still clears' ).to.equal( 'off' );
+    expect( el.state ).to.equal( 'error' );
+    expect( el.error ).to.equal( boom );
+    expect( event.detail.error ).to.equal( boom );
   } );
 } );
