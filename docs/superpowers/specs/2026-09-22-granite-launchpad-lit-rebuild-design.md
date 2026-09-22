@@ -236,16 +236,33 @@ them.
 own, so `<granite-launchpad></granite-launchpad>` is a working twin and the
 slotted form exists for when the board needs its own attributes or styling.
 
-**Mirroring.** Hardware to screen: `launchpad.on('key', …)` sets the board.
-Screen to hardware: a `pad-press` on the board sends `col()`. Colour
-translation is string to `Color` – `parseColor()` yields `{hue, level}`, and the
-twin calls `launchpad[hue].level(level)`, all public API.
+**Mirroring.** The hardware reports presses, never colours, and a press does
+not change a colour on either side – lighting a pad in response is the
+application's job, exactly as it is for a screen press. So:
+
+- *Hardware to screen:* `launchpad.on('key', …)` makes the twin dispatch
+  `pad-press` or `pad-release` from its own host, carrying the pad's current
+  colour. A hardware press and a screen press reach the page as the same event.
+- *Screen to hardware:* nothing extra. Board events already bubble through the
+  twin to the page.
+- *Colour, both ways:* `setColor()`, `setColors()` and `reset()` on the twin
+  paint the board and send to the hardware in one call. Translation is string to
+  `Color` – `parseColor()` yields `{hue, level}` and the twin calls
+  `launchpad[hue].level(level)`, or `launchpad.off`, all public API.
+
+Because colour only ever travels outward from a method call, there is no path
+by which a mirrored event can feed back and loop.
 
 **Errors.** `state` and `error` are set and `launchpad-error` fires when
 `connect()` rejects, so a browser without Web MIDI, a missing board or a denied
 permission is visible to the page. This is the lesson recorded in the
 whack-a-launchpad 1.1.0 changelog, where an unhandled rejection left a blank
 page and a console warning.
+
+**Disconnecting.** `launchpad-webmidi`'s `Observable` has `on()` and `emit()`
+but no `off()`, so a `key` handler cannot be unsubscribed. `disconnect()`
+therefore sets `state` back to `idle` and raises an internal flag that makes the
+handler ignore anything that still arrives.
 
 **Injection.** The `launchpad` property exists so tests can supply a fake and
 run the twin without hardware.
@@ -329,7 +346,8 @@ emit press and release; a pointer released outside the pad still releases it;
 touch input behaves as pointer input; Space and Enter emit the same pair;
 `disabled` suppresses all of it; ARIA attributes are present and correct.
 
-**`<granite-launchpad-board>`** – renders 81 pads with no pad at `(8, 8)`;
+**`<granite-launchpad-board>`** – renders 80 pads, the 9 × 9 grid less the
+corner, with no pad at `(8, 8)`;
 `setColor()` and `getColor()` round-trip; out-of-range coordinates are no-ops;
 `setColors()` applies a batch; `reset()` clears; press and release carry the
 right `x` and `y`; `padAt()` resolves.
