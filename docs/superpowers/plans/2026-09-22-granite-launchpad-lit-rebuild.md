@@ -2381,6 +2381,14 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
     later in the page attaches its listener, so `launchpad-connect` may be
     missed; `state` is reflected as an attribute precisely so a page in that
     position can read the outcome instead of racing for the event.
+
+    Also document losing the device mid-session, which is behaviour the twin
+    gained during implementation: `launchpad-webmidi` sends through a bare
+    `MIDIOutput.send()`, which throws synchronously once the port is gone. The
+    twin catches that, sets `state` to `error`, fires one `launchpad-error`, and
+    keeps painting the board – so unplugging a Launchpad degrades the page to
+    screen-only instead of throwing out of `setColor()` at the caller. Say that
+    the event fires once, not once per write.
 12. `## Examples` – one line per file in `examples/`, and the `npx http-server` command.
 13. `## Coming from the Polymer element` – the migration table from the spec, verbatim.
 14. `## Known limitations` – three, each stated plainly:
