@@ -52,6 +52,20 @@ describe( 'granite-launchpad-pad rendering', () => {
     expect( cssColor( el ) ).to.equal( 'rgb(1, 2, 3)' );
   } );
 
+  it( 'honours a colour token set on an ancestor, not just on the pad itself', async () => {
+    // A default declared inside :host sits on the pad and beats anything
+    // inherited into it, so a token set on a wrapper would be silently
+    // ignored. The defaults must live only in the var() fallback for
+    // inheritance from an ancestor to have any effect.
+    const wrapper = await fixture( html`
+      <div style="--granite-launchpad-red-full: rgb(4, 5, 6)">
+        <granite-launchpad-pad color="red"></granite-launchpad-pad>
+      </div>` );
+    const el = wrapper.querySelector( 'granite-launchpad-pad' );
+    await elementUpdated( el );
+    expect( cssColor( el ) ).to.equal( 'rgb(4, 5, 6)' );
+  } );
+
   it( 'is square and rounds fully when asked', async () => {
     const square = await fixture( html`<granite-launchpad-pad></granite-launchpad-pad>` );
     const round = await fixture( html`<granite-launchpad-pad round></granite-launchpad-pad>` );
