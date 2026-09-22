@@ -1,0 +1,38 @@
+# .github/workflows/ci.yml
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  # Weekly, so a browser or Node release breaking the suite surfaces on its own
+  # rather than at the moment someone tries to cut a release.
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 20 is the floor declared in engines, 22 and 24 are the LTS lines, 26
+        # is Current. 24 matters most: it is what publish.yml uses.
+        node: ['20', '22', '24', '26']
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node }}
+
+      - run: npm ci
+
+      # The suite runs in a real browser, so the browser is part of the setup.
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm test
