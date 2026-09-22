@@ -414,7 +414,7 @@ The pad as a lit rectangle. No interaction yet.
 
 **Interfaces:**
 - Consumes: `parseColor`, `formatColor`, `normalizeColor`, `HUES` from `src/lib/colors.js`.
-- Produces: class `GraniteLaunchpadPad extends LitElement`, registered as `granite-launchpad-pad`. Properties `color: String` (reflected, canonical), `x: Number`, `y: Number`, `round: Boolean` (reflected), `disabled: Boolean` (reflected), `debug: Boolean`, `label: String`.
+- Produces: class `GraniteLaunchpadPad extends LitElement`, registered as `granite-launchpad-pad`. Properties `color: String` (canonical; the attribute is written in `willUpdate()`, not by Lit's `reflect`), `x: Number`, `y: Number`, `round: Boolean` (reflected by Lit), `disabled: Boolean` (reflected by Lit), `debug: Boolean`, `label: String`. `round` and `disabled` keep `reflect: true` because a boolean's `fromAttribute` is its own fixed point, which is exactly the case Lit's reflection guard was written for.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -492,6 +492,16 @@ Expected: FAIL – `src/granite-launchpad-pad.js` does not exist.
 
 Colour reaches CSS through attribute selectors on the canonical string rather than an inline custom property: the selectors are static, which means no per-pad inline style work when 80 pads repaint at MIDI rate.
 
+The `color` attribute is written by hand in `willUpdate()` rather than through
+Lit's `reflect: true`. Lit suppresses property-to-attribute reflection while it
+is processing an attribute-to-property change, which is correct for a property
+whose `fromAttribute` is its own fixed point, and wrong for this one: `color`
+canonicalises, so `color="red full"` yields the property `'red'` while the
+attribute stays `'red full'` and nothing ever reconciles them. The CSS selects
+on that attribute, so the pad would render unstyled. Writing it in `willUpdate()`
+is public API and converges in one pass – the write re-enters the setter, which
+canonicalises to the same value and requests no further update.
+
 ```js
 // src/granite-launchpad-pad.js
 import { LitElement, css, html } from 'lit';
@@ -512,7 +522,7 @@ import { parseColor, formatColor } from './lib/colors.js';
  */
 export class GraniteLaunchpadPad extends LitElement {
   static properties = {
-    color: { type: String, reflect: true },
+    color: { type: String },
     x: { type: Number },
     y: { type: Number },
     round: { type: Boolean, reflect: true },
@@ -595,6 +605,15 @@ export class GraniteLaunchpadPad extends LitElement {
 
   get color() {
     return this.#color;
+  }
+
+  willUpdate() {
+    // Not `reflect: true`: Lit suppresses reflection while it handles an
+    // attribute-to-property change, so a canonicalising property would leave
+    // the attribute holding the uncanonicalised string the CSS cannot match.
+    if ( this.getAttribute( 'color' ) !== this.#color ) {
+      this.setAttribute( 'color', this.#color );
+    }
   }
 
   render() {
@@ -810,6 +829,11 @@ Add to the class body of `src/granite-launchpad-pad.js`:
   }
 
   willUpdate() {
+    // Task 2 established this method for the colour attribute; the ARIA
+    // attributes join it rather than replacing it.
+    if ( this.getAttribute( 'color' ) !== this.color ) {
+      this.setAttribute( 'color', this.color );
+    }
     this.setAttribute( 'role', 'button' );
     this.setAttribute( 'tabindex', this.disabled ? '-1' : '0' );
     this.setAttribute( 'aria-label', this.label ?? this.#positionLabel() );
