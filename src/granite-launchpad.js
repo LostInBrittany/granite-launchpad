@@ -33,7 +33,7 @@ export class GraniteLaunchpad extends LitElement {
     }
   `;
 
-  #listening = false;
+  #listeningTo = null;
 
   constructor() {
     super();
@@ -107,9 +107,13 @@ export class GraniteLaunchpad extends LitElement {
       return false;
     }
 
-    if ( !this.#listening ) {
+    if ( this.#listeningTo !== this.launchpad ) {
+      // launchpad-webmidi's Observable has on() and emit() but no off(), so a
+      // previous instance's handler cannot be unsubscribed - it simply stops
+      // being fed once `launchpad` points elsewhere, and #onKey's state guard
+      // already covers any stray event from a stale one.
       this.launchpad.on( 'key', this.#onKey );
-      this.#listening = true;
+      this.#listeningTo = this.launchpad;
     }
     this.state = 'connected';
     this.#fire( 'launchpad-connect', { launchpad: this.launchpad } );

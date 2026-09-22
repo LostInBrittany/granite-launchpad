@@ -76,6 +76,24 @@ describe( 'granite-launchpad connection', () => {
     expect( el.getAttribute( 'state' ) ).to.equal( 'connected' );
   } );
 
+  it( 'listens to a second instance assigned to launchpad after a reconnect', async () => {
+    // #listeningTo tracks which instance was subscribed, not merely whether
+    // anything ever was - otherwise reassigning `launchpad` and reconnecting
+    // would leave the new instance's key handler unattached.
+    const first = new FakeLaunchpad();
+    const el = await twinWith( first );
+    await el.connect();
+
+    const second = new FakeLaunchpad();
+    el.launchpad = second;
+    await el.connect();
+
+    setTimeout( () => second.press( 4, 4, true ) );
+    const { detail } = await oneEvent( el, 'pad-press' );
+    expect( detail.x ).to.equal( 4 );
+    expect( detail.y ).to.equal( 4 );
+  } );
+
   it( 'stops listening after disconnect', async () => {
     const fake = new FakeLaunchpad();
     const el = await twinWith( fake );
