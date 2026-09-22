@@ -35,6 +35,19 @@ jobs:
       - name: Use an npm that supports trusted publishing
         run: npm install -g npm@latest
 
+      # This is what makes dry_run worth running: without it a dry run only
+      # repeats the test suite and says nothing about whether the workflow can
+      # actually authenticate. Presence only - never print the token itself.
+      - name: Report the publishing environment
+        run: |
+          echo "node: $(node --version)"
+          echo "npm:  $(npm --version)"
+          present() { if [ -n "$1" ]; then echo present; else echo MISSING; fi; }
+          echo "OIDC request URL: $(present "$ACTIONS_ID_TOKEN_REQUEST_URL")"
+          echo "OIDC token:       $(present "$ACTIONS_ID_TOKEN_REQUEST_TOKEN")"
+          echo "user .npmrc:      $(test -f "$NPM_CONFIG_USERCONFIG" && echo "$NPM_CONFIG_USERCONFIG" || echo none)"
+          echo "home .npmrc:      $(test -f ~/.npmrc && echo present || echo none)"
+
       - name: Install
         run: npm ci
 
