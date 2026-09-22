@@ -45,17 +45,34 @@ must be a secure context (HTTPS or `localhost`).
 npm install @granite-elements/granite-launchpad
 ```
 
-For a page with no build step, resolve the bare specifier with an import map
+There are two entry points, and which one to import depends on what you need:
+
+```js
+import '@granite-elements/granite-launchpad';       // pad + board, no MIDI
+import '@granite-elements/granite-launchpad/twin.js'; // + the twin
+```
+
+The bare specifier registers `<granite-launchpad-pad>` and
+`<granite-launchpad-board>` only. `<granite-launchpad>`, the twin, is
+registered solely by the `/twin.js` subpath – that split is what keeps
+`launchpad-webmidi` out of a page that only ever imports the board. Get this
+wrong and it fails silently: an unregistered custom element does not throw, it
+just renders as an empty inline box, `auto-connect` never fires, and no
+`launchpad-connect` or `launchpad-error` ever arrives. If `<granite-launchpad>`
+sits on the page doing nothing, this is the first thing to check.
+
+For a page with no build step, resolve both specifiers with an import map
 pointing at [esm.sh](https://esm.sh):
 
 ```html
 <script type="importmap">
   {"imports": {
-    "@granite-elements/granite-launchpad": "https://esm.sh/@granite-elements/granite-launchpad"
+    "@granite-elements/granite-launchpad": "https://esm.sh/@granite-elements/granite-launchpad",
+    "@granite-elements/granite-launchpad/twin.js": "https://esm.sh/@granite-elements/granite-launchpad/twin.js"
   }}
 </script>
 <script type="module">
-  import '@granite-elements/granite-launchpad';
+  import '@granite-elements/granite-launchpad/twin.js';
 </script>
 ```
 
@@ -71,6 +88,10 @@ The import map must come before any module script that relies on it.
 
 The twin renders a board itself, so it works with no children:
 
+```js
+import '@granite-elements/granite-launchpad/twin.js';
+```
+
 ```html
 <granite-launchpad>
   <granite-launchpad-board></granite-launchpad-board>
@@ -79,7 +100,8 @@ The twin renders a board itself, so it works with no children:
 
 The explicit child above is only needed when the board needs its own
 attributes or styling – `<granite-launchpad></granite-launchpad>` on its own
-is a working twin.
+is a working twin. Note the import: `<granite-launchpad>` needs `/twin.js`, not
+the bare specifier – see [Installation](#installation).
 
 ## Getting started
 
@@ -253,7 +275,7 @@ them. The board neither listens for its own pad events nor re-dispatches them
 | `autoConnect` | Boolean | `false` | Attribute `auto-connect`; connects on first update |
 | `launchpad` | Object | `null` | An existing `Launchpad` instance to mirror; a new one is constructed on `connect()` when unset |
 | `state` | String | `'idle'` | Reflected attribute: `idle`, `connecting`, `connected`, `error` |
-| `error` | Object | `null` | The reason the last `connect()` failed |
+| `error` | Object | `null` | The reason `connect()` failed, or the error thrown when a connected Launchpad went away mid-session |
 | `debug` | Boolean | `false` | |
 
 **Methods**
@@ -275,6 +297,10 @@ of which side – screen or hardware – originated them.
 
 Set `auto-connect` to have the twin connect as soon as it first updates,
 without calling `connect()` yourself:
+
+```js
+import '@granite-elements/granite-launchpad/twin.js';
+```
 
 ```html
 <granite-launchpad auto-connect></granite-launchpad>
