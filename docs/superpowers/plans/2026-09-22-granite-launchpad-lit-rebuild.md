@@ -1949,7 +1949,13 @@ Append to the `jobs:` block of `.github/workflows/ci.yml`:
       # The board must not drag MIDI code in. Only twin.js may mention it.
       - name: The board entry point does not reach launchpad-webmidi
         run: |
-          if grep -rn "launchpad-webmidi" index.js src/granite-launchpad-pad.js src/granite-launchpad-board.js src/lib/; then
+          # Match the package name only where it is a module specifier, which
+          # means preceded by a quote. This catches static imports, dynamic
+          # import(), require() and re-exports alike, and deliberately does not
+          # catch prose: these files mention launchpad-webmidi in comments to
+          # explain why yellow clamps to full and where setColors' argument
+          # shape comes from, and that documentation earns its place.
+          if grep -rn -e "'launchpad-webmidi" -e '"launchpad-webmidi' index.js src/granite-launchpad-pad.js src/granite-launchpad-board.js src/lib/; then
             echo "The board entry point imports launchpad-webmidi; only twin.js may." >&2
             exit 1
           fi
