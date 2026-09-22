@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] – 2026-09-22
+
+### Fixed
+
+- `<granite-launchpad>`'s `reset()` clears the hardware with one Launchpad
+  Reset command instead of eighty colour writes. On a real board the old
+  behaviour was visible: the grid cleared as a sweep rather than at once, and
+  a program calling `reset()` on a timer spent most of its MIDI budget on it.
+
+  The Reset command also clears state this component does not manage – the
+  display buffers, flashing and the duty cycle – which is a change only for a
+  page reaching past the twin to `launchpad` directly.
+
+### Changed
+
+- The handling that keeps an unplugged Launchpad from throwing at the caller
+  moved out of the colour-writing path into one place both it and `reset()`
+  use. `launchpad-webmidi` sends through a bare `MIDIOutput.send()`, which
+  throws synchronously once the port is gone, so every hardware write needs
+  that treatment and not just `col()`.
+
 ## [1.0.0] – 2026-09-22
 
 A rewrite in [Lit](https://lit.dev). The 2018 Polymer 2 elements this replaces
@@ -65,6 +86,7 @@ as `@granite-elements/granite-launchpad`.
 The original Polymer 2 elements, `granite-launchpad` and
 `granite-launchpad-switch`, distributed through Bower. Never published to npm.
 
-[Unreleased]: https://github.com/LostInBrittany/granite-launchpad/compare/1.0.0...HEAD
+[Unreleased]: https://github.com/LostInBrittany/granite-launchpad/compare/1.0.1...HEAD
+[1.0.1]: https://github.com/LostInBrittany/granite-launchpad/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/LostInBrittany/granite-launchpad/compare/bf8634e...1.0.0
 [0.1.0]: https://github.com/LostInBrittany/granite-launchpad/commit/bf8634e

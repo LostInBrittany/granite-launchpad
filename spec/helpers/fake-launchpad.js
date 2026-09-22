@@ -8,13 +8,14 @@ const palette = new Launchpad();
  */
 export class FakeLaunchpad {
   constructor( { failWith = null } = {} ) {
-    this._colError = null;
+    this._outputError = null;
     this.red = palette.red;
     this.green = palette.green;
     this.amber = palette.amber;
     this.yellow = palette.yellow;
     this.off = palette.off;
     this.calls = [];
+    this.resets = [];
     this.connected = false;
     this._failWith = failWith;
     this._handlers = {};
@@ -36,16 +37,28 @@ export class FakeLaunchpad {
     // MIDIOutput.send() throws synchronously once the port is gone, and
     // launchpad-webmidi's sendRaw() calls it directly, so this is what a
     // Launchpad unplugged mid-session actually looks like to the twin.
-    if ( this._colError ) {
-      throw this._colError;
+    if ( this._outputError ) {
+      throw this._outputError;
     }
     this.calls.push( { color, buttons } );
     return Promise.resolve( true );
   }
 
-  /** Make every later col() throw, as an unplugged Launchpad does. */
+  /**
+   * The real reset() is a single sendRaw(), so it fails exactly as col() does.
+   *
+   * @param {Number} brightness 0 clears every LED; 1-3 light them all amber.
+   */
+  reset( brightness ) {
+    if ( this._outputError ) {
+      throw this._outputError;
+    }
+    this.resets.push( brightness );
+  }
+
+  /** Make every later write throw, as an unplugged Launchpad does. */
   breakOutput( error ) {
-    this._colError = error;
+    this._outputError = error;
   }
 
   /** Push a key event as the hardware would. */

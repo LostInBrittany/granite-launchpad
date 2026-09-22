@@ -295,7 +295,7 @@ them. The board neither listens for its own pad events nor re-dispatches them
 | `setColor(x, y, color)` | Paints the board and sends to the hardware in one call |
 | `setColors(entries)` | Batch form of `setColor()` |
 | `getColor(x, y)` | Reads the board's colour at `x, y` |
-| `reset()` | Every pad to `'off'`, on screen and on the hardware |
+| `reset()` | Every pad to `'off'`, on screen and on the hardware. See the note below |
 
 **Events:** `launchpad-connect`, `launchpad-disconnect`, `launchpad-error`
 (`detail: {error}`), and the board's `pad-press` and `pad-release`, regardless
@@ -355,6 +355,17 @@ run the twin with no hardware:
 twin.launchpad = fakeLaunchpad;
 await twin.connect();
 ```
+
+### Resetting
+
+`reset()` clears the hardware with a single Launchpad Reset command rather
+than eighty individual colour writes, so a real board clears at once instead
+of sweeping across the grid.
+
+That command also clears device state this component does not manage – the
+display buffers, flashing and the duty cycle. It only matters if you have been
+reaching past the twin to `twin.launchpad` to set those yourself; if you have
+not, there is nothing to notice.
 
 ## Examples
 
