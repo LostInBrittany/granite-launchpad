@@ -148,9 +148,11 @@ something the board it mirrors cannot do. The clamp warns when `debug` is set.
 
 ### Rendering
 
-A pad sets `background: var(--granite-launchpad-<hue>-<level>)`, giving 13
-tokens: `off`, plus `low`/`medium`/`full` for each of `red`, `green`, `amber`
-and `yellow`. Defaults approximate Launchpad Mini LEDs; all are overridable.
+A pad sets `background: var(--granite-launchpad-<hue>-<level>)`, giving 11
+tokens: `off`, `low`/`medium`/`full` for each of `red`, `green` and `amber`, and
+`yellow-full` alone – yellow clamps to full, so a token for a dimmer yellow
+would never be read. Defaults approximate Launchpad Mini LEDs; all are
+overridable.
 
 A brightness bloom is available through `--granite-launchpad-glow`, unset by
 default. Flat rectangles do not read as lit LEDs, but the effect is opt-in

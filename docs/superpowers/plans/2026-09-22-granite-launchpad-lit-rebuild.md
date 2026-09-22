@@ -17,7 +17,7 @@
 - Coordinates are `(x, y)`: `x` column 0–8 (`x=8` Scene), `y` row 0–8 (`y=0` top of the 8 × 8, increasing downward, `y=8` Automap drawn above). `(8,8)` does not exist.
 - Out-of-range and `(8,8)`: `setColor()` is a no-op, `getColor()` returns `undefined`, both warn only when `debug` is set.
 - Canonical colour strings: `off`, `red`, `red medium`, `red low`, and the same for `green`, `amber`, `yellow`. **Full brightness formats as the bare hue.** Any level `0` normalises to `off`. Yellow clamps to full.
-- CSS tokens: `--granite-launchpad-<hue>-<low|medium|full>` plus `--granite-launchpad-off`. 13 in total.
+- CSS tokens: `--granite-launchpad-<hue>-<low|medium|full>` for red, green and amber, `--granite-launchpad-yellow-full`, plus `--granite-launchpad-off`. 11 in total: yellow has one level because the hardware cannot dim it.
 - Events `pad-press` and `pad-release`, both `bubbles: true, composed: true`, `detail: {x, y, color}`.
 - ESM only. No Rollup, no `dist/`, no build step. `"type": "module"`.
 - Prose in README, CHANGELOG and commit messages uses the spaced en-dash `–`, never `—`.
@@ -340,7 +340,7 @@ export function normalizeColor( value, options ) {
 - [ ] **Step 8: Run the test and watch it pass**
 
 Run: `npm test`
-Expected: PASS, 12 tests.
+Expected: PASS, 14 tests.
 
 - [ ] **Step 9: Write the CI workflow**
 
@@ -533,8 +533,8 @@ export class GraniteLaunchpadPad extends LitElement {
       --granite-launchpad-amber-low: #4a3410;
       --granite-launchpad-amber-medium: #9c6c1e;
       --granite-launchpad-amber-full: #ffae2f;
-      --granite-launchpad-yellow-low: #ffe94f;
-      --granite-launchpad-yellow-medium: #ffe94f;
+      /* Yellow has no low or medium: parseColor clamps it to full, so a
+         token for either would be dead. */
       --granite-launchpad-yellow-full: #ffe94f;
 
       display: block;
@@ -610,7 +610,7 @@ if ( !customElements.get( 'granite-launchpad-pad' ) ) {
 - [ ] **Step 4: Run the test and watch it pass**
 
 Run: `npm test`
-Expected: PASS, 12 + 7 tests.
+Expected: PASS, 14 + 7 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -905,7 +905,7 @@ there is nothing inside it to draw.
 - [ ] **Step 4: Run the tests and watch them pass**
 
 Run: `npm test`
-Expected: PASS, 12 + 7 + 14 tests.
+Expected: PASS, 14 + 7 + 14 tests.
 
 - [ ] **Step 5: Commit**
 
@@ -2185,7 +2185,7 @@ Follow the `launchpad-webmidi` README shape. Prose uses the spaced en-dash `–`
 6. `## Getting started` – the `examples/board.html` body as the worked example.
 7. `## Coordinates` – the ASCII diagram from the spec, verbatim, with the three bullets under it.
 8. `## Colours` – the canonical strings, the parse table from the spec, the note that full brightness is written as the bare hue, and that yellow clamps to full because the hardware cannot dim it.
-9. `## Styling` – the 13 colour tokens, `--granite-launchpad-pad-size`, `--granite-launchpad-gap`, `--granite-launchpad-glow`.
+9. `## Styling` – the 11 colour tokens, `--granite-launchpad-pad-size`, `--granite-launchpad-gap`, `--granite-launchpad-glow`.
 10. `## API` – every property, method and event of all three elements, in three tables copied from the spec's element sections.
 11. `## The twin` – `auto-connect`, the `state` values, handling `launchpad-error`, and the `launchpad` property for injecting a fake.
 12. `## Examples` – one line per file in `examples/`, and the `npx http-server` command.
