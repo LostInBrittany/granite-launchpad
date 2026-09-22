@@ -89,6 +89,12 @@ export class GraniteLaunchpadBoard extends LitElement {
     `;
   }
 
+  #warnOffBoard( x, y ) {
+    if ( this.debug ) {
+      console.warn( `[granite-launchpad-board] no pad at ${ x },${ y }` );
+    }
+  }
+
   /**
    * @param {Number} x Column, 0-8, where 8 is the Scene column
    * @param {Number} y Row, 0-8, where 8 is the Automap row
@@ -96,9 +102,7 @@ export class GraniteLaunchpadBoard extends LitElement {
    */
   setColor( x, y, color ) {
     if ( !onBoard( x, y ) ) {
-      if ( this.debug ) {
-        console.warn( `[granite-launchpad-board] no pad at ${ x },${ y }` );
-      }
+      this.#warnOffBoard( x, y );
       return;
     }
     this.#colors[ index( x, y ) ] = normalizeColor( color, { debug: this.debug } );
@@ -121,7 +125,11 @@ export class GraniteLaunchpadBoard extends LitElement {
    * @return {String|undefined} The canonical colour, or undefined off the board
    */
   getColor( x, y ) {
-    return onBoard( x, y ) ? this.#colors[ index( x, y ) ] : undefined;
+    if ( !onBoard( x, y ) ) {
+      this.#warnOffBoard( x, y );
+      return undefined;
+    }
+    return this.#colors[ index( x, y ) ];
   }
 
   /** Turn every pad off. */

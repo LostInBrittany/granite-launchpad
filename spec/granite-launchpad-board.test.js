@@ -95,6 +95,26 @@ describe( 'granite-launchpad-board colours', () => {
     expect( el.padAt( 4, 4 ).color ).to.equal( 'off' );
   } );
 
+  it( 'warns on both reads and writes off the board, but only when debug is set', async () => {
+    const quiet = await board();
+    const loud = await fixture( html`<granite-launchpad-board debug></granite-launchpad-board>` );
+    const original = console.warn;
+    const warnings = [];
+    console.warn = ( ...args ) => warnings.push( args.join( ' ' ) );
+    try {
+      quiet.setColor( 8, 8, 'red' );
+      quiet.getColor( 8, 8 );
+      expect( warnings, 'silent without debug' ).to.be.empty;
+
+      loud.setColor( 8, 8, 'red' );
+      expect( warnings ).to.have.lengthOf( 1 );
+      loud.getColor( 8, 8 );
+      expect( warnings, 'a read off the board warns too' ).to.have.lengthOf( 2 );
+    } finally {
+      console.warn = original;
+    }
+  } );
+
   it( 'ignores coordinates that are not on the board', async () => {
     const el = await board();
     for ( const [ x, y ] of [ [ -1, 0 ], [ 0, -1 ], [ 9, 0 ], [ 0, 9 ], [ 8, 8 ] ] ) {
